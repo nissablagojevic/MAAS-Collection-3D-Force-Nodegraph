@@ -1,0 +1,6 @@
+.item-tile {
+    pointer-events: visible;
+    display: block;
+    max-width: 240px;
+    white-space: normal;
+}
