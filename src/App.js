@@ -2,8 +2,6 @@ import { default as React, Component } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.css';
 
-import { fetchQuery } from './actions';
-
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import { Navigation, About, Nodegraph } from './components';

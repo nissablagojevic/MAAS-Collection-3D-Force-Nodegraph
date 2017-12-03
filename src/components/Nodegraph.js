@@ -1,117 +1,147 @@
 import { default as React, Component } from 'react';
-import Papa from 'papaparse';
 import qwest from 'qwest';
-import { fetchQuery } from '../actions';
 import ForceGraph3D from '3d-force-graph/dist/3d-force-graph.min.js';
+import mapNode from '../schemas/node.js';
+import mapLink from '../schemas/link.js';
 
-const tunnel = function(Graph) {
-
-    const perimeter = 12, length = 30;
-
-    const getId = (col, row) => `${col},${row}`;
-
-    let nodes = [], links = [];
-    for (let colIdx=0; colIdx<perimeter; colIdx++) {
-        for (let rowIdx=0; rowIdx<length; rowIdx++) {
-            const id = getId(colIdx, rowIdx);
-            nodes.push({id});
-
-            // Link vertically
-            if (rowIdx>0) {
-                links.push({ source: getId(colIdx, rowIdx-1), target: id });
-            }
-
-            // Link horizontally
-            links.push({ source: getId((colIdx || perimeter) - 1, rowIdx), target: id });
-        }
+var sourceUrl = 'https://api.maas.museum/graphql?query=';
+var sourceQuery = `{narratives(filter:{_id:69}){
+    _id
+    title
+    objects(limit: 100) {
+      _id
+      title
+      displayTitle
+      description
+      category
+      terms {
+        id
+        term
+      }
+      production {
+        date
+        dateLatest
+        dateEarliest
+      }
+      images(limit: 1) {
+        url(width: 200, height: 200)
+      }
     }
+  }
+}`;
 
-    Graph.cooldownTicks(300)
-        .forceEngine('ngraph')
-        .graphData({ nodes: nodes, links: links });
+//graphJson is the collection of nodes and links required to make a valid 3d force graph
+var graphSchema = {
+    nodes: [],
+    links: []
 };
+
+
+
+
+var nodeGraph = new ForceGraph3D();
+
+function interpretData(data) {
+
+    var nodeData;
+    var linkData;
+    //for each object in our query map it to our graph Schema
+
+    data.narratives.forEach((narrative) => {nodeData = mapNodes(narrative, graphSchema, 'narrative')});
+    data.narratives[0].objects.forEach((obj) => {nodeData = mapNodes(obj, graphSchema, 'object')});
+    data.narratives[0].objects.forEach((obj) => {
+        obj.terms.forEach((term) => {
+            nodeData = mapNodes(term, graphSchema, 'term');
+        });
+    });
+
+    //data.narratives.forEach((narrative) => {linkData = mapLinks(narrative, graphSchema, 'narrative', 'objects')});
+    data.narratives[0].objects.forEach((obj) => {linkData = mapLinks(obj, graphSchema, 'object', 'terms')});
+
+
+    console.log("INTERPRET DATA");
+    console.log(nodeData);
+
+    //need to figure out why this is working for links too
+    var graphData = nodeData;
+
+    return graphData;
+}
+
+function graph(sourceUrl, sourceQuery, nodeGraph) {
+
+    qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
+
+        var graphData = interpretData(response.data);
+
+        nodeGraph(document.getElementById('nodegraph'))
+            .cooldownTicks(300)
+            .idField('id')
+            .valField('val')
+            .nameField('name')
+            .autoColorBy('type')
+            .forceEngine('ngraph')
+            .graphData(graphData);
+
+    }).catch(function(e, xhr, response) {
+        // Process the error in getting the json file
+        console.log('DATA GET ERROR');
+        console.log(e);
+    });
+
+}
+
+function mapLinks(startObject, linkSchema, linkId = 'link', linkToType = 'objects') {
+    var linksJson = linkSchema;
+    var links = mapLink(startObject, linkId, linkToType);
+
+    links.forEach((link) => {linksJson.links.push(link)});
+
+    return linksJson;
+}
+
+function mapNodes(startObject, nodeSchema, nodeId = 'node') {
+
+    //graphJson is the collection of nodes and links required to make a valid 3d force graph
+    var nodesJson = nodeSchema;
+
+    //generate a node with an id, name and value
+    var node = mapNode(startObject, nodeId);
+
+    nodesJson.nodes.push(node);
+
+    return nodesJson;
+}
+
 
 
 class NodeGraph extends Component {
     constructor() {
         super();
-        this.state = {}
+        this.state = {
+            graph: ''
+        }
     }
 
     componentDidMount() {
-        const gData = this.getGraphDataSets();
-        console.log('gData');
-        console.log(gData);
+        this.renderGraph();
     }
 
     renderGraph() {
-        var nodeGraph = ForceGraph3D();
-
+            return (
+                <div id="another">
+                    {this.graphDataSets()}
+                </div>
+            );
     }
 
-    getGraphDataSets() {
-        console.log("GET GRAPH DATA SETS");
-        var nodeGraph = ForceGraph3D();
-
-        var nodeLinkData = function(nodeGraph) {
-            var graphJson = {
-                nodes: [],
-                links: []
-            };
-
-            graphJson.nodes[0] = {
-                id: 'id0',
-                name: 'basenode',
-                val : '1'
-            };
-
-            //get data from collection
-            //https://api.maas.museum/graphql?query=%7B%0A%20%20narratives(filter%3A%7B_id%3A%2069%7D)%20%7B%0A%20%20%20%20_id%0A%20%20%20%20title%0A%20%20%20%20objects(limit%3A%20100)%20%7B%0A%20%20%20%20%20%20_id%0A%20%20%20%20%20%20title%0A%20%20%20%20%20%20displayTitle%0A%20%20%20%20%20%20description%0A%20%20%20%20%20%20category%0A%20%20%20%20%20%20production%20%7B%0A%20%20%20%20%20%20%20%20date%0A%20%20%20%20%20%20%20%20dateLatest%0A%20%20%20%20%20%20%20%20dateEarliest%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20images(limit%3A1)%20%7B%0A%20%20%20%20%20%20%20%20url(width%3A%20200%2C%20height%3A%20200)%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D
-            var tempUrl = `https://api.maas.museum/graphql?query=%7B%0A%20%20narratives(filter%3A%7B_id%3A%2069%7D)%20%7B%0A%20%20%20%20_id%0A%20%20%20%20title%0A%20%20%20%20objects(limit%3A%20100)%20%7B%0A%20%20%20%20%20%20_id%0A%20%20%20%20%20%20title%0A%20%20%20%20%20%20displayTitle%0A%20%20%20%20%20%20description%0A%20%20%20%20%20%20category%0A%20%20%20%20%20%20production%20%7B%0A%20%20%20%20%20%20%20%20date%0A%20%20%20%20%20%20%20%20dateLatest%0A%20%20%20%20%20%20%20%20dateEarliest%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20images(limit%3A1)%20%7B%0A%20%20%20%20%20%20%20%20url(width%3A%20200%2C%20height%3A%20200)%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D`;
-
-            qwest.get(tempUrl).then((xhr, response) => {
-                //for each narrative in our query
-                response.data.narratives.forEach(narrative => {
-                    //generate a node with an id, name and value
-                    var node = {};
-                    var link = {};
-                    node.id = 'id'+`${narrative._id}`;
-                    node.name = `${narrative._id?narrative._id+': ':''}${narrative.title}`;
-                    node.val = `${narrative._id}`;
-
-                    //generate a link between the node and the base node, because lazy right now
-                    link.source = 'id0';
-                    link.target = 'id'+`${narrative._id}`;
-                    //make that narrative a  node on our map
-                    graphJson.nodes.push(node);
-                    graphJson.links.push(link);
-                });
-
-                 nodeGraph(document.getElementById('nodegraph'))
-                     .cooldownTicks(300)
-                     .idField('id')
-                     .valField('val')
-                     .nameField('name')
-                     .autoColorBy('val')
-                     .forceEngine('ngraph')
-                     .graphData(graphJson);
-
-            }).catch(function(e, xhr, response) {
-                // Process the error in getting the json file
-                console.log('ERROR IN GETTING JSON');
-                console.log(e);
-            });
-
-        };
-
-        return nodeLinkData(nodeGraph);
+    graphDataSets() {
 
 
-        /**
-        var loadD3Dependencies = qwest.get('.d3.csv').then((_, csvData) => {
-            const nodes = [], links = [];
-            const { data: [, ...data] } = Papa.parse(csvData); // Parse csv
+        return graph(sourceUrl, sourceQuery, nodeGraph);
 
+
+/**
             data.pop(); // Remove last empty row
 
             data.forEach(([size, path]) => {
@@ -150,7 +180,7 @@ class NodeGraph extends Component {
 
     render() {
         return (
-            <div id="nodegraph"></div>
+            <div id="nodegraph">{this.state.graph}</div>
         );
     }
 }
