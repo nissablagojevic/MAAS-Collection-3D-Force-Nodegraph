@@ -17,20 +17,6 @@ class App extends Component {
         }
     }
 
-
-    componentDidMount() {
-        /**console.log("WORDPRESS");
-         fetchQuery('https://nissablagojevic.dev/wp-json/wp/v2/pages/154?_embed', {method: 'GET'})
-         .then(json => {
-          console.log("JSON");
-          console.log(json);
-          if(typeof json === 'object') {
-            this.setState({wordPress: json});
-          }
-          return json;
-        });**/
-    }
-
     handleErrors(response) {
         if (!response.ok) {
             console.log(
@@ -40,25 +26,6 @@ class App extends Component {
         return response;
     }
 
-    /**
-    renderApp(wordpressObject) {
-
-        var wP = '';
-
-        if (typeof wordpressObject === 'object') {
-            wP = <article id={"post-" + this.state.wordPress.id}>
-                <a href="{this.state.wordPress.title.rendered}" className="">
-
-                    <header className="entry-header">
-                        <h1 className="entry-title">{this.state.wordPress.title.rendered}</h1>
-                    </header>
-                </a>
-                {this.state.wordPress.content.rendered}
-            </article>;
-        }
-
-        return wP;
-    }**/
 
     renderRoutes(env) {
         var prefix = '/';
@@ -117,8 +84,7 @@ class App extends Component {
                     <div>
                         <Navigation development={this.setEnv()}/>
 
-          {this.renderRoutes(this.setEnv())}
-          {/** {this.renderApp(this.state.wordPress)}**/}
+                        {this.renderRoutes(this.setEnv())}
                     </div>
                 </Router>
             </div>
