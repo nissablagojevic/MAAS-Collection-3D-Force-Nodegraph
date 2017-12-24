@@ -1,7 +1,5 @@
 export default function mapLink(startObject, linkId, linkToType, callback){
 
-    console.log(startObject);
-
     var id = 'UNDEFINED ID';
 
     if (startObject._id) {
@@ -18,7 +16,6 @@ export default function mapLink(startObject, linkId, linkToType, callback){
 
                 //SUPER HACKY SHIT WAY TO GET RID OF THE PLURAL ON OBJECTS OR TERMS OR NARRATIVES ETC FOR THE TARGET
                 //WILL LIKELY FAIL ON WORDS WITH NON-S PLURALS
-
                 var targetId = 'UNDEFINED ID';
                 if (type._id) {
                     targetId = `-${type._id}`;

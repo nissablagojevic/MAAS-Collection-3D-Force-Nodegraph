@@ -4,8 +4,8 @@ import ForceGraph3D from '3d-force-graph/dist/3d-force-graph.min.js';
 import mapNode from '../schemas/node.js';
 import mapLink from '../schemas/link.js';
 
-var sourceUrl = 'https://api.maas.museum/graphql?query=';
-var sourceQuery = `{narratives(filter:{_id:69}){
+const sourceUrl = 'https://api.maas.museum/graphql?query=';
+const sourceQuery = `{narratives(filter:{_id:69}){
     _id
     title
     objects(limit: 100) {
@@ -30,151 +30,114 @@ var sourceQuery = `{narratives(filter:{_id:69}){
   }
 }`;
 
-//graphJson is the collection of nodes and links required to make a valid 3d force graph
-var graphSchema = {
-    nodes: [],
-    links: []
-};
-
-
-
-
-var nodeGraph = new ForceGraph3D();
-
-function interpretData(data) {
-
-    var nodeData;
-    var linkData;
-    //for each object in our query map it to our graph Schema
-
-    data.narratives.forEach((narrative) => {nodeData = mapNodes(narrative, graphSchema, 'narrative')});
-    data.narratives[0].objects.forEach((obj) => {nodeData = mapNodes(obj, graphSchema, 'object')});
-    data.narratives[0].objects.forEach((obj) => {
-        obj.terms.forEach((term) => {
-            nodeData = mapNodes(term, graphSchema, 'term');
-        });
-    });
-
-    //data.narratives.forEach((narrative) => {linkData = mapLinks(narrative, graphSchema, 'narrative', 'objects')});
-    data.narratives[0].objects.forEach((obj) => {linkData = mapLinks(obj, graphSchema, 'object', 'terms')});
-
-
-    console.log("INTERPRET DATA");
-    console.log(nodeData);
-
-    //need to figure out why this is working for links too
-    var graphData = nodeData;
-
-    return graphData;
-}
-
-function graph(sourceUrl, sourceQuery, nodeGraph) {
-
-    qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
-
-        var graphData = interpretData(response.data);
-
-        nodeGraph(document.getElementById('nodegraph'))
-            .cooldownTicks(300)
-            .idField('id')
-            .valField('val')
-            .nameField('name')
-            .autoColorBy('type')
-            .forceEngine('ngraph')
-            .graphData(graphData);
-
-    }).catch(function(e, xhr, response) {
-        // Process the error in getting the json file
-        console.log('DATA GET ERROR');
-        console.log(e);
-    });
-
-}
-
-function mapLinks(startObject, linkSchema, linkId = 'link', linkToType = 'objects') {
-    var linksJson = linkSchema;
-    var links = mapLink(startObject, linkId, linkToType);
-
-    links.forEach((link) => {linksJson.links.push(link)});
-
-    return linksJson;
-}
-
-function mapNodes(startObject, nodeSchema, nodeId = 'node') {
-
-    //graphJson is the collection of nodes and links required to make a valid 3d force graph
-    var nodesJson = nodeSchema;
-
-    //generate a node with an id, name and value
-    var node = mapNode(startObject, nodeId);
-
-    nodesJson.nodes.push(node);
-
-    return nodesJson;
-}
-
-
-
 class NodeGraph extends Component {
     constructor() {
         super();
         this.state = {
-            graph: ''
+            graph: 'Please wait while graph loads...'
         }
     }
 
     componentDidMount() {
-        this.renderGraph();
+        this.setState({graph: this.graphFromUrl(sourceUrl, sourceQuery)});
     }
 
-    renderGraph() {
-            return (
-                <div id="another">
-                    {this.graphDataSets()}
-                </div>
-            );
+    /*
+     * Description: resolve graphQl data against 3d-force-graph schemas
+     *
+     * @param {object} response.data from graphQl endpoint
+     */
+    static mapData(data) {
+
+        //graphSchema is the collection of nodes and links required to make a valid 3d force graph
+        let graphSchema = {
+            nodes: [],
+            links: []
+        };
+
+        //for each object in our query map it to our graph Schema and store that our nodeData var
+        data.narratives.forEach((narrative) => {NodeGraph.mapNodes(narrative, graphSchema, 'narrative')});
+
+        //for the first narrative's objects returned in the query, map the objects as nodes and term and put that in our graphschema
+        data.narratives[0].objects.forEach((obj) => {NodeGraph.mapNodes(obj, graphSchema, 'object')});
+
+        //for the first narrative map each object's terms to nodes and put that in our graphschema
+        data.narratives[0].objects.forEach((obj) => {
+            obj.terms.forEach((term) => {NodeGraph.mapNodes(term, graphSchema, 'term')});
+        });
+
+        //for each of the first narrative's object, map the link between the object nodes and term nodes and put that in our graphschema
+        data.narratives[0].objects.forEach((obj) => {NodeGraph.mapLinks(obj, graphSchema, 'object', 'terms')});
+
+        return graphSchema;
     }
 
-    graphDataSets() {
+    /*
+     * Description: Using a starting object, create 3d-graph links according to a provided linkSchema
+     *
+     * @param {object} startObject - The node to which we are creating a link
+     * @param {object} linkContainer - What we put the links in
+     * @param {string} linkId - Just the name we use to prefix generated link IDs
+     * @param {string} linkToType What node type to link to the startObject
+     */
+    static mapLinks(startObject, linkContainer, linkId = 'link', linkToType = 'objects') {
+        let linksJson = linkContainer;
+        const links = mapLink(startObject, linkId, linkToType);
+
+        links.forEach((link) => {linksJson.links.push(link)});
+
+        return linksJson;
+    }
+
+    /*
+     * Description: Using a starting object, create 3d-graph node according to a provided nodeSchema
+     *
+     * @param {object} startObject - The node to which we are creating a link
+     * @param {object} nodeContainer - What we put our nodes in
+     * @param {string} nodeId - Just the name we use to prefix generated link IDs
+     */
+    static mapNodes(startObject, nodeContainer, nodeId = 'node') {
+
+        let nodesJson = nodeContainer;
+
+        //generate a node with an id, name and value
+        const node = mapNode(startObject, nodeId);
+
+        nodesJson.nodes.push(node);
+
+        return nodesJson;
+    }
 
 
-        return graph(sourceUrl, sourceQuery, nodeGraph);
+    /*
+     * Description: Create 3d-graph from GraphQL endpoint and GraphQL query via HTTP
+     *
+     * @param {string} sourceUrl - The GraphQL endpoint
+     * @param {string} sourceQuery - The GraphQL query
+     */
 
+    graphFromUrl(sourceUrl, sourceQuery) {
 
-/**
-            data.pop(); // Remove last empty row
+        const nodeGraph = new ForceGraph3D();
 
-            data.forEach(([size, path]) => {
-                const levels = path.split('/'),
-                    module = levels.length > 1 ? levels[1] : null,
-                    leaf = levels.pop(),
-                    parent = levels.join('/');
+        qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
 
-                nodes.push({
-                    path,
-                    leaf,
-                    module,
-                    size: +size || 1
-                });
+            const graphData = NodeGraph.mapData(response.data);
 
-                if (parent) {
-                    links.push({ source: parent, target: path});
-                }
-            });
-
-        ForceGraph3D.cooldownTicks(300)
-                .nodeRelSize(0.5)
-                .idField('path')
-                .valField('size')
-                .nameField('path')
-                .autoColorBy('module')
+            nodeGraph(document.getElementById('nodegraph'))
+                .cooldownTicks(300)
+                .idField('id')
+                .valField('val')
+                .nameField('name')
+                .autoColorBy('type')
                 .forceEngine('ngraph')
-                .graphData({ nodes: nodes, links: links });
-            });
+                .graphData(graphData);
 
-        //tunnel.description = "fabric data for a cylindrical tunnel shape";**/
-        //return [loadBlocks, loadD3Dependencies, tunnel];
-        //return [loadBlocks];
+        }).catch(function(e, xhr, response) {
+            // Process the error in getting the json file
+            console.log('DATA RETRIEVAL ERROR');
+            console.log(e);
+        });
 
     }
 
