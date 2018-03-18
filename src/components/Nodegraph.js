@@ -38,9 +38,7 @@ const sourceQuery = `{narratives(filter:{_id:69}){
     }
   }
 }`;
-
-let width = 1000;
-let height = 300;
+let fetchingJson = false;
 
 //3D STUFF with THREE.JS
 let renderer = new THREE.WebGLRenderer();
@@ -49,7 +47,7 @@ camera.position.z = 5;
 //camera.far = 20000;
 
 
-function resizeCanvas() {
+function resizeCanvas(width = 1000, height = 300) {
     if (width && height) {
         renderer.setSize(width, height);
         camera.aspect = width/height;
@@ -94,7 +92,7 @@ mainScene.add(graphScene)
 let lineMaterials = {}; // indexed by color
 let sphereMaterials = {};
 let nodeResolution = 10;
-let nodeRelSize = 4;
+let nodeRelSize = 1;
 let sphereGeometries = {};
 
 var responseData = null;
@@ -201,7 +199,8 @@ class NodeGraph extends Component {
     constructor() {
         super();
         this.state = {
-            graphData: ''
+            width: '100%',
+            height: '100vh'
         };
 
         this.animate = this.animate.bind(this);
@@ -212,14 +211,12 @@ class NodeGraph extends Component {
     }
 
     componentDidMount() {
+        //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
-            //const graphData = NodeGraph.mapData(response.data);
-            //this.setState({graphData: graphData});
             console.log('qwest get');
-            console.log(response.data);
-            //return mapData(response.data);
             responseData = response.data;
-            //ADD DATA TO GRAPH REF HERE
+
+            //this used to be where and how we called the 3d force graph package we just cannibalised.
             /**nodeGraph(document.getElementById('nodegraph'))
              .cooldownTicks(300)
              .idField('id')
@@ -235,7 +232,9 @@ class NodeGraph extends Component {
             console.log(e);
         });
 
-        resizeCanvas();
+        this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
+
+        resizeCanvas(this.state.width, this.state.height);
         this.mount.appendChild(renderer.domElement);
 
         //start requestAnimationFrame checker;
@@ -247,8 +246,22 @@ class NodeGraph extends Component {
         //this.setState({graph: this.graphFromUrl(sourceUrl, sourceQuery)});
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps, prevState) {
         console.log('component did update');
+        resizeCanvas(this.state.width, this.state.height);
+        //once we add react state to allow parameters to change, we'll need to check if we need to request new data
+        //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
+        //not fetching data again.
+        if (prevProps !== this.props) {
+            qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
+                console.log('qwest get');
+                responseData = response.data;
+            }).catch(function (e, xhr, response) {
+                // Process the error in getting the json file
+                console.log('DATA RETRIEVAL ERROR');
+                console.log(e);
+            });
+        }
     }
 
 
@@ -280,10 +293,24 @@ class NodeGraph extends Component {
             return null;
         }
 
-        if(responseData) {
-            //the graph new calculations occur here
-            let data = mapData(responseData);
+        //check we haven't already fetched the graphQL data
+        if(!fetchingJson && sourceUrl && responseData !== null) {
 
+            //we're definitely fetching it now if we have non-null responseData
+            fetchingJson = true;
+
+            //prevent the sphere and line creators from complaining about not having data in the meantime
+            let data= {
+                links: [],
+                nodes: []
+            };
+
+            //if it has finally returned stuff, map it to nodes and links schema
+            if(!responseData.length) {
+                data = mapData(responseData);
+            }
+
+            //map the newly created links to lines in THREE.js and add them to the scene
             data.links.forEach(link => {
                 if (!lineMaterials.hasOwnProperty('color')) {
                     lineMaterials['color'] = new THREE.LineBasicMaterial({
@@ -303,6 +330,7 @@ class NodeGraph extends Component {
                 mainScene.add(link.__line = line);
             });
 
+            //map the newly created nodes to spheres
             data.nodes.forEach(node => {
                 const val = 1;
                 if (!sphereGeometries.hasOwnProperty(val)) {
@@ -355,8 +383,8 @@ class NodeGraph extends Component {
                 x: e.pageX - offset.left,
                 y: e.pageY - offset.top
             };
-        mousePos.x = (relPos.x / width) * 2 - 1;
-        mousePos.y = -(relPos.y / height) * 2 + 1;
+        mousePos.x = (relPos.x / this.state.width) * 2 - 1;
+        mousePos.y = -(relPos.y / this.state.height) * 2 + 1;
 
         // Move tooltip
         //toolTipElem.style.top = (relPos.y - 40) + 'px';
@@ -386,7 +414,7 @@ class NodeGraph extends Component {
         renderer.render(mainScene, camera);
 
         return (
-            <div id="nodegraph" ref={mount => this.mount = mount} style={{width: width, height: height}}/>
+            <div id="nodegraph" ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}/>
         );
     }
 }
