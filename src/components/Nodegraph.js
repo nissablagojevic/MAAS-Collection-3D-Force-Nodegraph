@@ -40,57 +40,8 @@ const sourceQuery = `{narratives(filter:{_id:69}){
   }
 }`;
 
-
-//3D STUFF with THREE.JS
-//we need something to render with and something to see the render with
-let renderer = new THREE.WebGLRenderer();
-let camera = new THREE.PerspectiveCamera();
-camera.position.z = 5;
 const CAMERA_DISTANCE2NODES_FACTOR = 150;
-//camera.far = 20000;
-
-
-
-function resizeCanvas(width = 1000, height = 300) {
-    if (width && height) {
-        renderer.setSize(width, height);
-        camera.aspect = width/height;
-        camera.updateProjectionMatrix();
-    }
-}
-
-
-
-
-
-
-
-// Capture mouse coords on move
-const raycaster = new THREE.Raycaster();
-const mousePos = new THREE.Vector2();
-mousePos.x = -2; // Initialize off canvas
-mousePos.y = -2;
-
-// Add camera interaction
-const tbControls = new trackballControls(camera, renderer.domElement);
-
-//nodeclicking goodness
-let onNodeClick = {};
-
-const d3ForceLayout = d3.forceSimulation()
-    .force('link', d3.forceLink())
-    .force('charge', d3.forceManyBody())
-    .force('center', d3.forceCenter())
-    .stop();
-
-
-
-let lineMaterials = {}; // indexed by color
-let sphereMaterials = {};
-let nodeResolution = 10;
-let nodeRelSize = 10;
-let sphereGeometries = {};
-
+const MAXFRAMES = 1000;
 
 /*** TEST CUBE
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -98,12 +49,6 @@ var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 var cube = new THREE.Mesh( geometry, material );
 mainScene.add( cube );
 camera.position.z = 5;**/
-
-//camera.far = 20000;
-
-    //GRAPHING STUFF WITH D3.JS
-
-    //GET DATA
 
 
 /*
@@ -183,9 +128,6 @@ function getOffset(el) {
 }
 
 
-const nodeGraph = new ForceGraph3D();
-
-const MAXFRAMES = 100;
 
 class NodeGraph extends Component {
     constructor() {
@@ -200,6 +142,15 @@ class NodeGraph extends Component {
             mappedData: null
         };
 
+
+        //3D STUFF with THREE.JS
+        //we need something to render with and something to see the render with
+        this.renderer = new THREE.WebGLRenderer();
+        this.camera = new THREE.PerspectiveCamera();
+        this.camera.position.z = 5;
+        this.camera.far = 20000;
+
+        //animation frame counter and the somewhat magical _frameId
         this.counter = 0;
         this._frameId = null;
 
@@ -212,6 +163,16 @@ class NodeGraph extends Component {
         this.ambientLight = new THREE.AmbientLight(0xbbbbbb);
         this.directLight = new THREE.DirectionalLight(0xffffff, 0.6);
 
+
+        // Add camera interaction and mousebased input
+
+
+        // Capture mouse coords on move
+        this.raycaster = new THREE.Raycaster();
+        this.mousePos = new THREE.Vector2();
+        this.mousePos.x = -2; // Initialize off canvas
+        this.mousePos.y = -2;
+
         //the graphGroup is there for all of our nodes and links, our main actors.
         this.graphGroup = new THREE.Group();
 
@@ -219,7 +180,20 @@ class NodeGraph extends Component {
             .add(this.ambientLight)
             .add(this.directLight);
 
+        //node and link 3d properties
+        this.onNodeClick = {};
+        this.lineMaterials = {}; // indexed by color
+        this.sphereMaterials = {};
+        this.nodeResolution = 10;
+        this.nodeRelSize = 10;
+        this.sphereGeometries = {};
+
         //d3 force stuff
+        this.d3ForceLayout = d3.forceSimulation()
+            .force('link', d3.forceLink())
+            .force('charge', d3.forceManyBody())
+            .force('center', d3.forceCenter())
+            .stop();
         //forceEngine can be d3 or ngraph
         this.forceEngine = 'ngraph';
         this.numDimensions = 3;
@@ -232,11 +206,14 @@ class NodeGraph extends Component {
         this.startTickTime = new Date();
 
 
+
+
+
         this.animate = this.animate.bind(this);
         this.mouseMove = this.mouseMove.bind(this);
         this.handleClick = this.handleClick.bind(this);
-        renderer.domElement.addEventListener("mousemove", this.mouseMove);
-        renderer.domElement.addEventListener("click", this.handleClick);
+        this.renderer.domElement.addEventListener("mousemove", this.mouseMove);
+        this.renderer.domElement.addEventListener("click", this.handleClick);
     }
 
     componentDidMount() {
@@ -245,7 +222,10 @@ class NodeGraph extends Component {
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
         //has updated the component with the proper width and height, and there's fallback values
-        this.mount.appendChild(renderer.domElement);
+        this.mount.appendChild(this.renderer.domElement);
+
+        //start trying to use controls
+        this.tbControls = new trackballControls(this.camera, this.renderer.domElement);
 
         //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
@@ -281,7 +261,7 @@ class NodeGraph extends Component {
         console.log('component did update');
 
         if (prevState !== this.state) {
-            resizeCanvas(this.state.width, this.state.height);
+            this.resizeCanvas(this.state.width, this.state.height);
         }
         this.mainScene.background = new THREE.Color(0, 0, 255);
         this._frameId = null; // Pause simulation
@@ -312,7 +292,7 @@ class NodeGraph extends Component {
 
         if (isD3Sim && this.state.mappedData !== null) {
             // D3-force
-            (layout = d3ForceLayout)
+            (layout = this.d3ForceLayout)
                 .stop()
                 .alpha(1)// re-heat the simulation
                 .numDimensions(this.numDimensions)
@@ -395,9 +375,18 @@ class NodeGraph extends Component {
         this.stopLoop();
     }
 
+    resizeCanvas(width = 1000, height = 300) {
+        if (width && height) {
+            this.renderer.setSize(width, height);
+            this.camera.aspect = width/height;
+            this.camera.updateProjectionMatrix();
+        }
+    }
+
     startLoop() {
         console.log('startLoop');
         if( !this._frameId) {
+            this.setState({animating: true});
             this._frameId = window.requestAnimationFrame( this.animate );
         }
     }
@@ -424,9 +413,11 @@ class NodeGraph extends Component {
         };
 
         //default escape hatch with counter until we figure out if qwest's promise is hammering the server
-        if ((MAXFRAMES && this.counter > MAXFRAMES) || !this.state.animating) {
-            //the renderer owns the mainScene
-            console.log(renderer);
+        //if (!this.state.animating) {
+            if ((MAXFRAMES && this.counter > MAXFRAMES) || !this.state.animating) {
+
+                //the renderer owns the mainScene
+            console.log(this.renderer);
             //the mainScene owns the children AmbientLight, DirectLight, and our Graph group...
             console.log(this.mainScene);
             //the graphGroup owns the Lines and Node Meshes
@@ -450,6 +441,11 @@ class NodeGraph extends Component {
 
                 //about to switch context, so no more of 'this' for the time being
                 const gG = this.graphGroup;
+                const lineMaterials = this.lineMaterials;
+                const sphereGeometries = this.sphereGeometries;
+                const sphereMaterials = this.sphereMaterials;
+                const nodeRelSize = this.nodeRelSize;
+                const nodeResolution = this.nodeResolution;
 
                 //map the newly created links to lines in THREE.js and add them to the scene
                 data.links.forEach(link => {
@@ -502,23 +498,23 @@ class NodeGraph extends Component {
         }
 
 
-        if (camera.position.x === 0 && camera.position.y === 0) {
+        if (this.camera.position.x === 0 && this.camera.position.y === 0) {
             // If camera still in default position (not user modified)
-            camera.lookAt(this.graphGroup.position);
+            this.camera.lookAt(this.graphGroup.position);
             if(this.state.responseData !== null && this.state.responseData.hasOwnProperty('narratives')) {
                 //we're assuming that we're working in narratives here, and only on one.
                 //console.log(this.state.responseData.narratives[0].objects.length);
-                camera.position.z = Math.cbrt(this.state.responseData.narratives[0].objects.length) * CAMERA_DISTANCE2NODES_FACTOR;
+                this.camera.position.z = Math.cbrt(this.state.responseData.narratives[0].objects.length) * CAMERA_DISTANCE2NODES_FACTOR;
 
             }
         }
 
-            raycaster.setFromCamera(mousePos, camera);
-            tbControls.update();
+            this.raycaster.setFromCamera(this.mousePos, this.camera);
+            this.tbControls.update();
 
         //this is the important bit. After we've dicked with the mainScene's (or just its children's contents),
         //the renderer needs to shove the frame to the screen
-            renderer.render(this.mainScene, camera);
+            this.renderer.render(this.mainScene, this.camera);
         if(this.state.animating) {
             //and the window needs to request a new frame to do this all again
             window.requestAnimationFrame( this.animate );
@@ -534,17 +530,17 @@ class NodeGraph extends Component {
 
     mouseMove(e) {
         // update the mouse pos
-        const offset = getOffset(renderer.domElement),
+        const offset = getOffset(this.renderer.domElement),
             relPos = {
                 x: e.pageX - offset.left,
                 y: e.pageY - offset.top
             };
-        mousePos.x = (relPos.x / this.state.width) * 2 - 1;
-        mousePos.y = -(relPos.y / this.state.height) * 2 + 1;
+        this.mousePos.x = (relPos.x / this.state.width) * 2 - 1;
+        this.mousePos.y = -(relPos.y / this.state.height) * 2 + 1;
 
-        raycaster.setFromCamera(mousePos, camera);
+        this.raycaster.setFromCamera(this.mousePos, this.camera);
         //check if our raycasted click event collides with something rendered in our graph group
-        const intersects = raycaster.intersectObjects(this.graphGroup.children)
+        const intersects = this.raycaster.intersectObjects(this.graphGroup.children)
             .filter(o => o.object.__data); // Check only objects with data (nodes)
         //if our mouseover collides with a node
         if (intersects.length) {
@@ -562,11 +558,11 @@ class NodeGraph extends Component {
 
     handleClick() {
         console.log('click');
-        if (onNodeClick) {
+        if (this.onNodeClick) {
             //update our raycaster's position with the mouse position coordinates and camera info
-            raycaster.setFromCamera(mousePos, camera);
+            this.raycaster.setFromCamera(this.mousePos, this.camera);
             //check if our raycasted click event collides with something rendered in our graph group
-            const intersects = raycaster.intersectObjects(this.graphGroup.children)
+            const intersects = this.raycaster.intersectObjects(this.graphGroup.children)
                 .filter(o => o.object.__data); // Check only objects with data (nodes)
             //if our click collided with a node
             if (intersects.length) {
