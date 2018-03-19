@@ -1,47 +1,20 @@
 import { default as React, Component } from 'react';
 import qwest from 'qwest';
-import ForceGraph3D from '3d-force-graph/dist/3d-force-graph.min.js';
-import mapNode from '../schemas/node.js';
-import mapLink from '../schemas/link.js';
+import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
 
+import './Nodegraph.css';
 
 //3d stuff
 import * as THREE from 'three';
 import trackballControls from 'three-trackballcontrols';
+import {add3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
+
+//force graphing
 import * as d3 from 'd3-force-3d';
 import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
-const ngraph = { graph, forcelayout, forcelayout3d };
 
-const sourceUrl = 'https://api.maas.museum/graphql?query=';
-const sourceQuery = `{narratives(filter:{_id:69}){
-    _id
-    title
-    objects(limit: 100) {
-      _id
-      title
-      displayTitle
-      description
-      category
-      terms {
-        id
-        term
-      }
-      production {
-        date
-        dateLatest
-        dateEarliest
-      }
-      images(limit: 1) {
-        url(width: 200, height: 200)
-      }
-    }
-  }
-}`;
-
-const CAMERA_DISTANCE2NODES_FACTOR = 150;
-const MAXFRAMES = 1000;
 
 /*** TEST CUBE
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -50,92 +23,12 @@ var cube = new THREE.Mesh( geometry, material );
 mainScene.add( cube );
 camera.position.z = 5;**/
 
-
-/*
- * Description: resolve graphQl data against 3d-force-graph schemas
- *
- * @param {object} response.data from graphQl endpoint
- */
-function mapData(data) {
-
-    //graphSchema is the collection of nodes and links required to make a valid 3d force graph
-    let graphSchema = {
-        nodes: [],
-        links: []
-    };
-
-    if(data && data.hasOwnProperty('narratives')) {
-        //for each object in our query map it to our graph Schema and store that our nodeData var
-        data.narratives.forEach((narrative) => {mapNodes(narrative, graphSchema, 'narrative')});
-
-        //for the first narrative's objects returned in the query, map the objects as nodes and term and put that in our graphschema
-        data.narratives[0].objects.forEach((obj) => {mapNodes(obj, graphSchema, 'object')});
-
-        //for the first narrative map each object's terms to nodes and put that in our graphschema
-        data.narratives[0].objects.forEach((obj) => {
-            obj.terms.forEach((term) => {mapNodes(term, graphSchema, 'term')});
-        });
-
-        //for each of the first narrative's object, map the link between the object nodes and term nodes and put that in our graphschema
-        data.narratives[0].objects.forEach((obj) => {mapLinks(obj, graphSchema, 'object', 'terms')});
-    }
-
-    return graphSchema;
-}
-
-
-/*
- * Description: Using a starting object, create 3d-graph links according to a provided linkSchema
- *
- * @param {object} startObject - The node to which we are creating a link
- * @param {object} linkContainer - What we put the links in
- * @param {string} linkId - Just the name we use to prefix generated link IDs
- * @param {string} linkToType What node type to link to the startObject
- */
-function mapLinks(startObject, linkContainer, linkId = 'link', linkToType = 'objects') {
-    let linksJson = linkContainer;
-    const links = mapLink(startObject, linkId, linkToType);
-
-    links.forEach((link) => {linksJson.links.push(link)});
-
-    return linksJson;
-}
-
-/*
- * Description: Using a starting object, create 3d-graph node according to a provided nodeSchema
- *
- * @param {object} startObject - The node to which we are creating a link
- * @param {object} nodeContainer - What we put our nodes in
- * @param {string} nodeId - Just the name we use to prefix generated link IDs
- */
-function mapNodes(startObject, nodeContainer, nodeId = 'node') {
-
-    let nodesJson = nodeContainer;
-
-    //generate a node with an id, name and value
-    const node = mapNode(startObject, nodeId);
-
-    nodesJson.nodes.push(node);
-
-    return nodesJson;
-}
-
-function getOffset(el) {
-    const rect = el.getBoundingClientRect(),
-        scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
-        scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
-}
-
-
-
 class NodeGraph extends Component {
     constructor() {
         super();
         this.state = {
             width: '100%',
             height: '100vh',
-            selectedNode: null,
             fetchingJson: false,
             animating: true,
             responseData: null,
@@ -157,15 +50,11 @@ class NodeGraph extends Component {
         //the mainscene is there to hold our lights and viewfog or other globally stuff
         //feel free to add objects that aren't going to change to it too if the rendering isn't working
         this.mainScene = new THREE.Scene();
-        this.mainScene.background = new THREE.Color(255, 0, 0);
+        this.mainScene.background = new THREE.Color(0, 0, 0);
 
         //fiat lux
         this.ambientLight = new THREE.AmbientLight(0xbbbbbb);
         this.directLight = new THREE.DirectionalLight(0xffffff, 0.6);
-
-
-        // Add camera interaction and mousebased input
-
 
         // Capture mouse coords on move
         this.raycaster = new THREE.Raycaster();
@@ -180,14 +69,6 @@ class NodeGraph extends Component {
             .add(this.ambientLight)
             .add(this.directLight);
 
-        //node and link 3d properties
-        this.onNodeClick = {};
-        this.lineMaterials = {}; // indexed by color
-        this.sphereMaterials = {};
-        this.nodeResolution = 10;
-        this.nodeRelSize = 10;
-        this.sphereGeometries = {};
-
         //d3 force stuff
         this.d3ForceLayout = d3.forceSimulation()
             .force('link', d3.forceLink())
@@ -196,6 +77,7 @@ class NodeGraph extends Component {
             .stop();
         //forceEngine can be d3 or ngraph
         this.forceEngine = 'ngraph';
+        this.isD3Sim = this.forceEngine !== 'ngraph';
         this.numDimensions = 3;
         this.idField = 'id';
         this.warmupTicks = 0;
@@ -204,10 +86,12 @@ class NodeGraph extends Component {
         this.cooldownTime = 15000;
         this.cntTicks = 0;
         this.startTickTime = new Date();
+        this.layout = null;
 
+        this.ngraph = { graph, forcelayout, forcelayout3d };
 
-
-
+        //interaction stuff
+        this.selectedNode = null;
 
         this.animate = this.animate.bind(this);
         this.mouseMove = this.mouseMove.bind(this);
@@ -224,7 +108,7 @@ class NodeGraph extends Component {
         //has updated the component with the proper width and height, and there's fallback values
         this.mount.appendChild(this.renderer.domElement);
 
-        //start trying to use controls
+        // Add camera interaction and mousebased input
         this.tbControls = new trackballControls(this.camera, this.renderer.domElement);
 
         //fetch data from API after initialisation
@@ -261,11 +145,9 @@ class NodeGraph extends Component {
         console.log('component did update');
 
         if (prevState !== this.state) {
-            this.resizeCanvas(this.state.width, this.state.height);
+            resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
         }
-        this.mainScene.background = new THREE.Color(0, 0, 255);
         this._frameId = null; // Pause simulation
-
 
         //once we add react state to allow parameters to change, we'll need to check if we need to request new data
         //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
@@ -287,12 +169,9 @@ class NodeGraph extends Component {
         }
 
         // Feed data to force-directed layout
-        const isD3Sim = this.forceEngine !== 'ngraph';
-        let layout;
-
-        if (isD3Sim && this.state.mappedData !== null) {
+        if (this.isD3Sim && this.state.mappedData !== null) {
             // D3-force
-            (layout = this.d3ForceLayout)
+            (this.layout = this.d3ForceLayout)
                 .stop()
                 .alpha(1)// re-heat the simulation
                 .numDimensions(this.numDimensions)
@@ -302,86 +181,82 @@ class NodeGraph extends Component {
                 .links(this.state.mappedData.links);
         } else {
             // ngraph
-            const graph = ngraph.graph();
+            const graph = this.ngraph.graph();
 
             if(this.state.mappedData !== null) {
                 this.state.mappedData.nodes.forEach(node => { graph.addNode(node[this.idField]); });
                 this.state.mappedData.links.forEach(link => { graph.addLink(link.source, link.target); });
-                layout = ngraph['forcelayout' + (this.numDimensions === 2 ? '' : '3d')](graph);
-                layout.graph = graph; // Attach graph reference to layout
+                this.layout = this.ngraph['forcelayout' + (this.numDimensions === 2 ? '' : '3d')](graph);
+                this.layout.graph = graph; // Attach graph reference to layout
             }
 
         }
 
 
-        if(layout && layout.graph) {
-            console.log('after layout check');
-            for (let i=0; i<this.warmupTicks; i++) { layout[isD3Sim?'tick':'step'](); } // Initial ticks before starting to render
+        if(this.layout && this.layout.graph) {
+            for (let i=0; i<this.warmupTicks; i++) { 
+                this.layout[this.isD3Sim?'tick':'step'](); 
+            } // Initial ticks before starting to render
 
-            this._frameId = layoutTick;
-
-            function layoutTick() {
-                console.log('layoutTick');
-                if (this.cntTicks++ > this.cooldownTicks || (new Date()) - this.startTickTime > this.cooldownTime) {
-                    this._frameId = null; // Stop ticking graph
-                }
-
-                layout[isD3Sim?'tick':'step'](); // Tick it
-
-                // Update nodes position
-                this.state.mappedData.nodes.forEach(node => {
-                    const sphere = node.__sphere;
-                    if (!sphere) return;
-
-                    const pos = isD3Sim ? node : layout.getNodePosition(node[this.idField]);
-
-                    sphere.position.x = pos.x;
-                    sphere.position.y = pos.y || 0;
-                    sphere.position.z = pos.z || 0;
-                });
-
-                // Update links position
-                this.state.mappedData.links.forEach(link => {
-                    const line = link.__line;
-                    if (!line) return;
-
-                    const pos = isD3Sim
-                            ? link
-                            : layout.getLinkPosition(layout.graph.getLink(link.source, link.target).id),
-                        start = pos[isD3Sim ? 'source' : 'from'],
-                        end = pos[isD3Sim ? 'target' : 'to'],
-                        linePos = line.geometry.attributes.position;
-
-                    linePos.array[0] = start.x;
-                    linePos.array[1] = start.y || 0;
-                    linePos.array[2] = start.z || 0;
-                    linePos.array[3] = end.x;
-                    linePos.array[4] = end.y || 0;
-                    linePos.array[5] = end.z || 0;
-
-                    linePos.needsUpdate = true;
-                    line.geometry.computeBoundingSphere();
-                });
-            }
-
+            this._frameId = this.layoutTick;
         }
 
 
     }
 
+    layoutTick() {
+        const layout = this.layout;
+        const isD3Sim = this.forceEngine !== 'ngraph';
+        let mappedData = this.state.mappedData;
+
+        //console.log('layoutTick');
+        if (this.cntTicks++ > this.cooldownTicks || (new Date()) - this.startTickTime > this.cooldownTime) {
+            this._frameId = null; // Stop ticking graph
+        }
+
+        layout[isD3Sim?'tick':'step'](); // Tick it
+
+        // Update nodes position
+        mappedData.nodes.forEach(node => {
+            const mesh = node.mesh;
+            if (!mesh) return;
+
+            const pos = isD3Sim ? node : layout.getNodePosition(node[this.idField]);
+
+            mesh.position.x = pos.x;
+            mesh.position.y = pos.y || 0;
+            mesh.position.z = pos.z || 0;
+        });
+
+        // Update links position
+        mappedData.links.forEach(link => {
+            const line = link.__line;
+            if (!line) return;
+
+            const pos = isD3Sim
+                    ? link
+                    : layout.getLinkPosition(layout.graph.getLink(link.source, link.target).id),
+                start = pos[isD3Sim ? 'source' : 'from'],
+                end = pos[isD3Sim ? 'target' : 'to'],
+                linePos = line.geometry.attributes.position;
+
+            linePos.array[0] = start.x;
+            linePos.array[1] = start.y || 0;
+            linePos.array[2] = start.z || 0;
+            linePos.array[3] = end.x;
+            linePos.array[4] = end.y || 0;
+            linePos.array[5] = end.z || 0;
+
+            linePos.needsUpdate = true;
+            line.geometry.computeBoundingSphere();
+        });
+    }
 
     /**ANIMATING STUFF STARTS HERE**/
     componentWillUnmount() {
         this.stopLoop();
     }
 
-    resizeCanvas(width = 1000, height = 300) {
-        if (width && height) {
-            this.renderer.setSize(width, height);
-            this.camera.aspect = width/height;
-            this.camera.updateProjectionMatrix();
-        }
-    }
 
     startLoop() {
         console.log('startLoop');
@@ -406,15 +281,16 @@ class NodeGraph extends Component {
 
 
     animate(prevProps, prevState) {
-        console.log(this.counter);
+        //console.log(this.counter);
 
         if(this._frameId) {
             this._frameId();
         };
 
         //default escape hatch with counter until we figure out if qwest's promise is hammering the server
-        //if (!this.state.animating) {
-            if ((MAXFRAMES && this.counter > MAXFRAMES) || !this.state.animating) {
+        //note, stopping the animation loop prevents mouse controls from firing too
+        if (!this.state.animating) {
+            //if ((MAX_FRAMES && this.counter > MAXFRAMES) || !this.state.animating) {
 
                 //the renderer owns the mainScene
             console.log(this.renderer);
@@ -436,58 +312,8 @@ class NodeGraph extends Component {
 
             //only map data if the state has changed
             if(prevState !== this.state) {
-                //map it to nodes and links schema
-                let data = this.state.mappedData;
-
-                //about to switch context, so no more of 'this' for the time being
-                const gG = this.graphGroup;
-                const lineMaterials = this.lineMaterials;
-                const sphereGeometries = this.sphereGeometries;
-                const sphereMaterials = this.sphereMaterials;
-                const nodeRelSize = this.nodeRelSize;
-                const nodeResolution = this.nodeResolution;
-
-                //map the newly created links to lines in THREE.js and add them to the scene
-                data.links.forEach(link => {
-                    if (!lineMaterials.hasOwnProperty('color')) {
-                        lineMaterials['color'] = new THREE.LineBasicMaterial({
-                            color: '#f0f0f0',
-                            transparent: true,
-                            opacity: 0.5
-                        });
-                    }
-
-                    const geometry = new THREE.BufferGeometry();
-                    geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(2 * 3), 3));
-                    const lineMaterial = lineMaterials['color'];
-                    const line = new THREE.Line(geometry, lineMaterial);
-
-                    line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
-                    gG.add(link.__line = line);
-                });
-
-                //map the newly created nodes to spheres
-                data.nodes.forEach(node => {
-                    const val = 1;
-                    if (!sphereGeometries.hasOwnProperty(val)) {
-                        sphereGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
-                    }
-
-                    if (!sphereMaterials.hasOwnProperty('color')) {
-                        sphereMaterials['color'] = new THREE.MeshLambertMaterial({
-                            color: '#ffffaa',
-                            transparent: true,
-                            opacity: 0.75
-                        });
-                    }
-
-                    const sphere = new THREE.Mesh(sphereGeometries[val], sphereMaterials['color']);
-
-                    sphere.name = node.name; // Add label
-                    sphere.__data = node; // Attach node data
-
-                    gG.add(node.__sphere = sphere);
-                });
+                //add our 3d manifestation of nodes and links
+                add3dStuff(this.state.mappedData, this.graphGroup);
             }
 
             //console.log(graphData);
@@ -509,12 +335,12 @@ class NodeGraph extends Component {
             }
         }
 
-            this.raycaster.setFromCamera(this.mousePos, this.camera);
-            this.tbControls.update();
+        this.raycaster.setFromCamera(this.mousePos, this.camera);
+        this.tbControls.update();
 
         //this is the important bit. After we've dicked with the mainScene's (or just its children's contents),
         //the renderer needs to shove the frame to the screen
-            this.renderer.render(this.mainScene, this.camera);
+        this.renderer.render(this.mainScene, this.camera);
         if(this.state.animating) {
             //and the window needs to request a new frame to do this all again
             window.requestAnimationFrame( this.animate );
@@ -544,21 +370,18 @@ class NodeGraph extends Component {
             .filter(o => o.object.__data); // Check only objects with data (nodes)
         //if our mouseover collides with a node
         if (intersects.length) {
-            //the node is....
-            console.log('mousedNode:');
-            console.log(intersects[0].object.__data);
+            this.tooltip.innerHTML = intersects[0].object.__data.id + ": " + intersects[0].object.__data.name;
+        } else {
+            this.tooltip.innerHTML = '';
         }
 
         // Move tooltip
-        //toolTipElem.style.top = (relPos.y - 40) + 'px';
-        //toolTipElem.style.left = (relPos.x - 20) + 'px';
-
+        this.tooltip.style.top = (relPos.y - 20) + 'px';
+        this.tooltip.style.left = (relPos.x - 20) + 'px';
 
     }
 
     handleClick() {
-        console.log('click');
-        if (this.onNodeClick) {
             //update our raycaster's position with the mouse position coordinates and camera info
             this.raycaster.setFromCamera(this.mousePos, this.camera);
             //check if our raycasted click event collides with something rendered in our graph group
@@ -566,25 +389,24 @@ class NodeGraph extends Component {
                 .filter(o => o.object.__data); // Check only objects with data (nodes)
             //if our click collided with a node
             if (intersects.length) {
-                //the clicked node data is....
-                console.log('selectedNode:');
-                console.log(intersects[0].object.__data);
                 //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-                this.setState({selectedNode: intersects[0].object.__data.id});
+                this.selectedNode = intersects[0].object.__data.id;
+
+                console.log(this.selectedNode);
+
             }
-        }
     }
 
     /**INTERACTION STUFF ENDS HERE**/
 
 
     render() {
-        console.log(this.mainScene);
         //this renders only the FIRST FRAME, animation begins in component did mount with startloop;
         //renderer.render(this.mainScene, camera);
-
         return (
-            <div id="nodegraph" ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}/>
+            <div id="nodegraph" ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}>
+                <div ref={tooltip => this.tooltip = tooltip} className="graph-tooltip" />
+            </div>
         );
     }
 }

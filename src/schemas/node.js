@@ -20,11 +20,19 @@ export default function mapNode(startObject, nodeId, callback){
         title = `${startObject.title}`;
     }
 
+    var imgUrl = 'https://placebear.com/g/300/300';
+    console.log(startObject);
+
+    if(startObject.images && startObject.images.length && startObject.images[0].url) {
+        imgUrl = startObject.images[0].url;
+    }
+
     //plonk the data in required format for a 3d-graph node
     return {
         id: nodeId + id,
         name: title,
         val: 10,
+        imageUrl: imgUrl,
         type: nodeId
     }
 }
