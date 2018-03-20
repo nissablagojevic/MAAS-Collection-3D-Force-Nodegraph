@@ -7,7 +7,7 @@ import './Nodegraph.css';
 //3d stuff
 import * as THREE from 'three';
 import trackballControls from 'three-trackballcontrols';
-import {add3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
+import {add3dStuff, update3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
 
 //force graphing
 import * as d3 from 'd3-force-3d';
@@ -216,40 +216,7 @@ class NodeGraph extends Component {
 
         layout[isD3Sim?'tick':'step'](); // Tick it
 
-        // Update nodes position
-        mappedData.nodes.forEach(node => {
-            const mesh = node.mesh;
-            if (!mesh) return;
-
-            const pos = isD3Sim ? node : layout.getNodePosition(node[this.idField]);
-
-            mesh.position.x = pos.x;
-            mesh.position.y = pos.y || 0;
-            mesh.position.z = pos.z || 0;
-        });
-
-        // Update links position
-        mappedData.links.forEach(link => {
-            const line = link.__line;
-            if (!line) return;
-
-            const pos = isD3Sim
-                    ? link
-                    : layout.getLinkPosition(layout.graph.getLink(link.source, link.target).id),
-                start = pos[isD3Sim ? 'source' : 'from'],
-                end = pos[isD3Sim ? 'target' : 'to'],
-                linePos = line.geometry.attributes.position;
-
-            linePos.array[0] = start.x;
-            linePos.array[1] = start.y || 0;
-            linePos.array[2] = start.z || 0;
-            linePos.array[3] = end.x;
-            linePos.array[4] = end.y || 0;
-            linePos.array[5] = end.z || 0;
-
-            linePos.needsUpdate = true;
-            line.geometry.computeBoundingSphere();
-        });
+        update3dStuff(mappedData, layout, isD3Sim, this.idField);
     }
 
     /**ANIMATING STUFF STARTS HERE**/
@@ -313,7 +280,9 @@ class NodeGraph extends Component {
             //only map data if the state has changed
             if(prevState !== this.state) {
                 //add our 3d manifestation of nodes and links
-                add3dStuff(this.state.mappedData, this.graphGroup);
+                const isD3Sim = this.forceEngine !== 'ngraph';
+
+                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
             }
 
             //console.log(graphData);

@@ -3,20 +3,14 @@
 
 
 "3d-force-graph@^1.10.1":
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/3d-force-graph/-/3d-force-graph-1.11.0.tgz#2f064a0a32559a15542ece888e73965f6d0de613"
+  version "1.28.7"
+  resolved "https://registry.yarnpkg.com/3d-force-graph/-/3d-force-graph-1.28.7.tgz#df4a4d5d85b3c1df2dc79c8ce49535deaf003c04"
   dependencies:
     accessor-fn "^1.2.2"
-    d3-binarytree "^0.1.2"
-    d3-force-3d "^1.0.7"
-    d3-octree "^0.1.2"
-    d3-scale-chromatic "^1.1.1"
-    kapsule "^1.7.8"
-    ngraph.forcelayout "^0.2.1"
-    ngraph.forcelayout3d "^0.0.16"
-    ngraph.graph "^0.0.14"
-    qwest "^4.5.0"
-    three "^0.89.0"
+    kapsule "^1.9.0"
+    three "^0.91.0"
+    three-dragcontrols "^0.88.2"
+    three-forcegraph "^1.9.4"
     three-trackballcontrols "^0.0.7"
     tinycolor2 "^1.4.1"
 
@@ -1830,7 +1824,7 @@ currently-unhandled@^0.4.1:
   dependencies:
     array-find-index "^1.0.1"
 
-d3-binarytree@^0.1.2, d3-binarytree@~0.1:
+d3-binarytree@~0.1:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/d3-binarytree/-/d3-binarytree-0.1.2.tgz#63e2774f13691bbd9112a80b5ed6e9902b327f0a"
 
@@ -1846,9 +1840,9 @@ d3-dispatch@1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/d3-dispatch/-/d3-dispatch-1.0.3.tgz#46e1491eaa9b58c358fce5be4e8bed626e7871f8"
 
-d3-force-3d@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/d3-force-3d/-/d3-force-3d-1.0.7.tgz#92b17f83f798472c52bc9f0d575b671e9ee5b7fc"
+d3-force-3d@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/d3-force-3d/-/d3-force-3d-1.1.0.tgz#dcfec4a54a348a57a382da9f2558312aa55a06f1"
   dependencies:
     d3-binarytree "~0.1"
     d3-collection "1"
@@ -1863,7 +1857,7 @@ d3-interpolate@1:
   dependencies:
     d3-color "1"
 
-d3-octree@^0.1.2, d3-octree@~0.1:
+d3-octree@~0.1:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/d3-octree/-/d3-octree-0.1.2.tgz#37bf919df79e661eda5865921eb6ca7f03897fcc"
 
@@ -1871,10 +1865,11 @@ d3-quadtree@1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/d3-quadtree/-/d3-quadtree-1.0.3.tgz#ac7987e3e23fe805a990f28e1b50d38fcb822438"
 
-d3-scale-chromatic@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/d3-scale-chromatic/-/d3-scale-chromatic-1.1.1.tgz#811406e8e09dab78a49dac4a32047d5d3edd0c44"
+d3-scale-chromatic@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/d3-scale-chromatic/-/d3-scale-chromatic-1.2.0.tgz#25820d059c0eccc33e85f77561f37382a817ab58"
   dependencies:
+    d3-color "1"
     d3-interpolate "1"
 
 d3-timer@1:
@@ -1897,6 +1892,10 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
+dat.gui@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/dat.gui/-/dat.gui-0.7.1.tgz#ff3f27c1029289840700f463748ec26df6269a70"
+
 date-fns@^1.27.2:
   version "1.29.0"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.29.0.tgz#12e609cdcb935127311d04d33334e2960a2a54e6"
@@ -1905,7 +1904,7 @@ date-now@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/date-now/-/date-now-0.1.4.tgz#eaf439fd4d4848ad74e5cc7dbef200672b9e345b"
 
-debounce@^1.0.2:
+debounce@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/debounce/-/debounce-1.1.0.tgz#6a1a4ee2a9dc4b7c24bb012558dbcdb05b37f408"
 
@@ -4386,11 +4385,11 @@ jsx-ast-utils@^2.0.0:
   dependencies:
     array-includes "^3.0.3"
 
-kapsule@^1.7.8:
-  version "1.7.8"
-  resolved "https://registry.yarnpkg.com/kapsule/-/kapsule-1.7.8.tgz#2515427c6903baca2d79c14dd60ef0398f763581"
+kapsule@^1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/kapsule/-/kapsule-1.9.0.tgz#5db2672ab7dbbc6eca9e7a60300fcd02ce86fede"
   dependencies:
-    debounce "^1.0.2"
+    debounce "^1.1.0"
 
 keycode@^2.1.2:
   version "2.1.9"
@@ -4891,6 +4890,10 @@ ngraph.events@0.0.3:
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/ngraph.events/-/ngraph.events-0.0.3.tgz#38f55316f3d207ad631ff94f6622ca8f2c0e87d0"
 
+ngraph.events@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/ngraph.events/-/ngraph.events-0.0.4.tgz#72cb364488dd0fd7f057458449f6a3b17a722d9a"
+
 ngraph.expose@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/ngraph.expose/-/ngraph.expose-0.0.0.tgz#746c34903a3848c45d033b14bc64619ea85fe5aa"
@@ -4913,12 +4916,12 @@ ngraph.forcelayout@0.0.22:
     ngraph.events "0.0.3"
     ngraph.physics.simulator "0.0.12"
 
-ngraph.forcelayout@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/ngraph.forcelayout/-/ngraph.forcelayout-0.2.1.tgz#9bc2602eafe755f637ec15f94a0ba136f0533592"
+ngraph.forcelayout@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/ngraph.forcelayout/-/ngraph.forcelayout-0.5.0.tgz#51511c3e1db45d3d5436da75dfb1d6af097916f5"
   dependencies:
-    ngraph.events "0.0.3"
-    ngraph.physics.simulator "^0.1.1"
+    ngraph.events "0.0.4"
+    ngraph.physics.simulator "^0.3.0"
 
 ngraph.graph@^0.0.14:
   version "0.0.14"
@@ -4945,9 +4948,9 @@ ngraph.physics.simulator@0.0.12:
     ngraph.quadtreebh "0.0.3"
     ngraph.random "0.0.1"
 
-ngraph.physics.simulator@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/ngraph.physics.simulator/-/ngraph.physics.simulator-0.1.1.tgz#8794665004d025b9e4232115fceffd97bfac08ad"
+ngraph.physics.simulator@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/ngraph.physics.simulator/-/ngraph.physics.simulator-0.3.0.tgz#7ca6fc3e3617c73e1080572eaa8e04dbb77e0102"
   dependencies:
     ngraph.events "0.0.3"
     ngraph.expose "0.0.0"
@@ -7087,17 +7090,34 @@ text-table@0.2.0, text-table@~0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
 
+three-dragcontrols@^0.88.2:
+  version "0.88.2"
+  resolved "https://registry.yarnpkg.com/three-dragcontrols/-/three-dragcontrols-0.88.2.tgz#e4b292657b8afffd00e573401da777dfd5dd5cd5"
+
+three-forcegraph@^1.9.4:
+  version "1.9.4"
+  resolved "https://registry.yarnpkg.com/three-forcegraph/-/three-forcegraph-1.9.4.tgz#4cfa93d09fbda5655ac1aa1aefe6cb42671399f4"
+  dependencies:
+    accessor-fn "^1.2.2"
+    d3-force-3d "^1.1.0"
+    d3-scale-chromatic "^1.2.0"
+    kapsule "^1.9.0"
+    ngraph.forcelayout "^0.5.0"
+    ngraph.forcelayout3d "^0.0.16"
+    ngraph.graph "^0.0.14"
+    tinycolor2 "^1.4.1"
+
 three-trackballcontrols@^0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/three-trackballcontrols/-/three-trackballcontrols-0.0.7.tgz#42cae1f6856d5f889eaae3a0e2fca9d214793e91"
 
-three@^0.86.0:
-  version "0.86.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.86.0.tgz#1c33e476a1537e9a8a18f5792d024b1046cd2000"
+three.meshline@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/three.meshline/-/three.meshline-1.0.3.tgz#85e9190d9de16bbdcffcc083746c3ea82be15a9b"
 
-three@^0.89.0:
-  version "0.89.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.89.0.tgz#4442d819a6168871b8d2cb37ad12a24310c170f5"
+three@^0.91.0:
+  version "0.91.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.91.0.tgz#033fe745b64e56e679a86581957cfd1c5f9fe284"
 
 throat@^3.0.0:
   version "3.2.0"
