@@ -8,12 +8,14 @@ import './Nodegraph.css';
 import * as THREE from 'three';
 import trackballControls from 'three-trackballcontrols';
 import {add3dStuff, update3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
+import dat from 'dat.gui';
 
 //force graphing
 import * as d3 from 'd3-force-3d';
 import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
+
 
 
 /*** TEST CUBE
@@ -64,6 +66,31 @@ class NodeGraph extends Component {
 
         //the graphGroup is there for all of our nodes and links, our main actors.
         this.graphGroup = new THREE.Group();
+
+        //our 3D node manifestation
+        this.lineMat = new THREE.LineBasicMaterial({
+            color: '#ffffff',
+            lineWidth: 10,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        this.sphereMat = new THREE.MeshBasicMaterial( {
+            color: '#ffffff',
+            transparent: true,
+            opacity: 0.6
+        } );
+
+
+        /**
+         *
+         *     //node and link 3d properties
+         const lineMaterials = {}; // indexed by color
+         const sphereGeometries = {};
+         const sphereMaterials = {};
+         const nodeRelSize = 10;
+         const nodeResolution = 10;
+         */
 
         this.mainScene.add(this.graphGroup)
             .add(this.ambientLight)
@@ -132,12 +159,48 @@ class NodeGraph extends Component {
             console.log(e);
         });
 
-
+        this.initGui();
         //start requestAnimationFrame checker;
         this.startLoop();
         //or just initial frame for testing purposes
         //renderer.render(mainScene, camera);
 
+
+    }
+
+    initGui() {
+
+        const gui = new dat.GUI();
+        let lineMat = this.lineMat;
+        let sphereMat = this.sphereMat;
+
+
+        var param = {
+            lineOpacity: lineMat.opacity,
+            lineColor: lineMat.color.getHex(),
+            nodeColor: sphereMat.color.getHex(),
+            nodeOpacity: sphereMat.opacity
+        };
+
+        var lineFolder = gui.addFolder('Lines');
+
+        lineFolder.add( param, 'lineOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
+            lineMat.opacity = val;
+        } );
+
+        lineFolder.addColor(param, 'lineColor').onChange(function(val){
+            lineMat.color.setHex( val );
+        });
+
+
+        var nodeFolder = gui.addFolder('Nodes');
+
+        nodeFolder.addColor(param, 'nodeColor').onChange(function(val){
+            sphereMat.color.setHex( val );
+        });
+        nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
+            sphereMat.opacity = val;
+        } );
 
     }
 
@@ -281,8 +344,8 @@ class NodeGraph extends Component {
             if(prevState !== this.state) {
                 //add our 3d manifestation of nodes and links
                 const isD3Sim = this.forceEngine !== 'ngraph';
-
-                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
+                //lol
+                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim, this.lineMat, this.sphereMat, this.nodeTexture);
             }
 
             //console.log(graphData);

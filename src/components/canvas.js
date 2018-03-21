@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import dat from 'dat.gui';
 
 //import {MeshLine} from 'three.meshline';
 
@@ -23,12 +22,12 @@ export function getOffset(el) {
     return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
 }
 
-export function add3dStuff(data, graphGroup) {
+export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nodeMaterials, nodeTexture) {
 
     //node and link 3d properties
-    const lineMaterials = {}; // indexed by color
-    const sphereGeometries = {};
-    const sphereMaterials = {};
+    //const lineMaterials = {}; // indexed by color
+    const nodeGeometries = {};
+    //const nodeMaterials = {};
     const nodeRelSize = 10;
     const nodeResolution = 10;
 
@@ -36,30 +35,37 @@ export function add3dStuff(data, graphGroup) {
     data.nodes.forEach(node => {
         //this val would affect the radius of the sphere, but we don't have info mapped to that.
         const val = 1;
-        if (!sphereGeometries.hasOwnProperty(val)) {
-            sphereGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
+        if (!nodeGeometries.hasOwnProperty(val)) {
+            nodeGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
         }
 
         //TEMPORARY UNTIL I GET CORS GOING ON SERVER
-        node.imageUrl = 'https://instagram.fmel1-1.fna.fbcdn.net/vp/94d1cc1192566037bde989d5a863e368/5B414519/t51.2885-15/s640x640/sh0.08/e35/20214323_1492574297455295_3536729040805167104_n.jpg';
-
+        node.imageUrl = 'https://instagram.fmel1-1.fna.fbcdn.net/vp/7fcb02c925afda63874bcfdde952bc0b/5B28F33C/t51.2885-15/s640x640/sh0.08/e35/28754685_1920615668236824_3043251162649198592_n.jpg';
         new THREE.ImageLoader()
             .setCrossOrigin( '*' )
             //.load( node.imageUrl + performance.now(), function ( image ) {
             .load( node.imageUrl, function ( image ) {
-                var texture = new THREE.CanvasTexture( image );
-                var material = new THREE.MeshBasicMaterial( { color: 0xffffff, map: texture } );
-                const sphere = new THREE.Mesh(sphereGeometries[val], material);
+                const texture = new THREE.CanvasTexture( image );
+                const material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.1, depthTest: false } );
+
+                const spriteMaterial = new THREE.SpriteMaterial( { map: texture, color: 0xffffff, depthTest: false } );
+                const sprite = new THREE.Sprite( spriteMaterial );
+                sprite.scale.set(spriteMaterial.map.image.width/100, spriteMaterial.map.image.height/100, 1);
+
+                const sphere = new THREE.Mesh(nodeGeometries[val], material);
                 sphere.name = node.name; // Add label
                 sphere.__data = node; // Attach node data
+
+
                 graphGroup.add(node.mesh = sphere);
+                graphGroup.add(node.img = sprite);
 
             });
 
 
         /**
-         if (!sphereMaterials.hasOwnProperty('color')) {
-            sphereMaterials['color'] = new THREE.MeshLambertMaterial({
+         if (!nodeMaterials.hasOwnProperty('color')) {
+            nodeMaterials['color'] = new THREE.MeshLambertMaterial({
                 color: '#ffffaa',
                 transparent: true,
                 opacity: 0.75
@@ -83,8 +89,7 @@ export function add3dStuff(data, graphGroup) {
         //each vertex stores 3 position values (x,y,z) and there are 2 of those, so 2 * 3 Typed Array.
         const geometry = new THREE.BufferGeometry();
         geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(2 * 3), 3));
-        const material = lineMaterials['color'];
-        const line = new THREE.Line(geometry, material);
+        const line = new THREE.Line(geometry, lineMaterials);
 
         line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
         graphGroup.add(link.__line = line);
@@ -99,13 +104,18 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
     // Update nodes position
     mappedData.nodes.forEach(node => {
         const mesh = node.mesh;
-        if (!mesh) return;
+        const sprite = node.img;
+
+        if (!mesh && !sprite) return;
 
         const pos = isD3Sim ? node : layout.getNodePosition(node[nodeIdField]);
 
         mesh.position.x = pos.x;
         mesh.position.y = pos.y || 0;
         mesh.position.z = pos.z || 0;
+        sprite.position.x = pos.x;
+        sprite.position.y = pos.y;
+        sprite.position.z = pos.z;
     });
 
     // Update links position
@@ -131,19 +141,6 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
         line.geometry.computeBoundingSphere();
 
 
-    });
-
-}
-
-
-export function initGui(line, matLine) {
-    const gui = new dat.GUI();
-    var param = {
-        'width (px)': 5,
-    };
-
-    gui.add(param, 'width (px)', 1, 10, 1).onChange(function (val) {
-        matLine.linewidth = val;
     });
 
 }

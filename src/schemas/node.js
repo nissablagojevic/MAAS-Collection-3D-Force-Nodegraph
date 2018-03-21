@@ -20,8 +20,7 @@ export default function mapNode(startObject, nodeId, callback){
         title = `${startObject.title}`;
     }
 
-    var imgUrl = 'https://placebear.com/g/300/300';
-    console.log(startObject);
+    let imgUrl = '';
 
     if(startObject.images && startObject.images.length && startObject.images[0].url) {
         imgUrl = startObject.images[0].url;
