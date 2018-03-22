@@ -28,7 +28,7 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nod
     //const lineMaterials = {}; // indexed by color
     const nodeGeometries = {};
     //const nodeMaterials = {};
-    const nodeRelSize = 10;
+    const nodeRelSize = 20;
     const nodeResolution = 10;
 
     //map the newly created nodes to spheres
@@ -40,17 +40,18 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nod
         }
 
         //TEMPORARY UNTIL I GET CORS GOING ON SERVER
-        node.imageUrl = 'https://instagram.fmel1-1.fna.fbcdn.net/vp/7fcb02c925afda63874bcfdde952bc0b/5B28F33C/t51.2885-15/s640x640/sh0.08/e35/28754685_1920615668236824_3043251162649198592_n.jpg';
+        //node.imageUrl = 'https://instagram.fmel1-1.fna.fbcdn.net/vp/7fcb02c925afda63874bcfdde952bc0b/5B28F33C/t51.2885-15/s640x640/sh0.08/e35/28754685_1920615668236824_3043251162649198592_n.jpg';
         new THREE.ImageLoader()
             .setCrossOrigin( '*' )
             //.load( node.imageUrl + performance.now(), function ( image ) {
             .load( node.imageUrl, function ( image ) {
+                //if we have an image for the node, put it in there with its sphere
                 const texture = new THREE.CanvasTexture( image );
                 const material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.1, depthTest: false } );
 
                 const spriteMaterial = new THREE.SpriteMaterial( { map: texture, color: 0xffffff, depthTest: false } );
                 const sprite = new THREE.Sprite( spriteMaterial );
-                sprite.scale.set(spriteMaterial.map.image.width/100, spriteMaterial.map.image.height/100, 1);
+                sprite.scale.set(spriteMaterial.map.image.width/15, spriteMaterial.map.image.height/15, 1);
 
                 const sphere = new THREE.Mesh(nodeGeometries[val], material);
                 sphere.name = node.name; // Add label
@@ -60,6 +61,16 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nod
                 graphGroup.add(node.mesh = sphere);
                 graphGroup.add(node.img = sprite);
 
+            },
+              undefined,
+              function() {
+                //Image loading error nodes.
+                const material = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5, depthTest: true } );
+                const sphere = new THREE.Mesh(nodeGeometries[val], material);
+                sphere.name = node.name; // Add label
+                sphere.__data = node; // Attach node data
+                console.log('errorrrr');
+                graphGroup.add(node.mesh = sphere);
             });
 
 
@@ -110,12 +121,18 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
 
         const pos = isD3Sim ? node : layout.getNodePosition(node[nodeIdField]);
 
-        mesh.position.x = pos.x;
-        mesh.position.y = pos.y || 0;
-        mesh.position.z = pos.z || 0;
-        sprite.position.x = pos.x;
-        sprite.position.y = pos.y;
-        sprite.position.z = pos.z;
+        if(mesh) {
+          mesh.position.x = pos.x;
+          mesh.position.y = pos.y || 0;
+          mesh.position.z = pos.z || 0;
+        }
+
+        if(sprite) {
+          sprite.position.x = pos.x;
+          sprite.position.y = pos.y;
+          sprite.position.z = pos.z;
+        }
+
     });
 
     // Update links position

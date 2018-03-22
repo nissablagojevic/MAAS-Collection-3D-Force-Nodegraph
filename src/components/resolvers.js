@@ -22,7 +22,7 @@ export const sourceQuery = `{narratives(filter:{_id:69}){
         dateEarliest
       }
       images(limit: 1) {
-        url(width: 200, height: 200)
+        url(width: 320, height: 320)
       }
     }
   }
