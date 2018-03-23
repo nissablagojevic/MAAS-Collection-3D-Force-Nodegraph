@@ -48,16 +48,25 @@ function addSprite(node, image, graphGroup, addData = false) {
 
 function addSphere(node, image, graphGroup, addData = false) {
   const nodeGeometries = {};
-  //const nodeMaterials = {};
-  const nodeRelSize = 20;
-  const nodeResolution = 10;
+  const nodeMaterials = {};
+  const nodeRelSize = 10;
+  const nodeResolution = 20;
 
   //this val would affect the radius of the sphere, but we don't have info mapped to that.
   const val = 1;
   if (!nodeGeometries.hasOwnProperty(val)) {
     nodeGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
   }
-  const material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.1, depthTest: false } );
+
+  var texture = new THREE.CanvasTexture( image );
+  texture.mapping = THREE.SphericalReflectionMapping;
+  const material = new THREE.MeshLambertMaterial(
+    { color: 0xffffff,
+      transparent: true,
+      opacity: 1,
+      envMap: texture,
+      reflectivity: 1
+    } );
   const sphere = new THREE.Mesh(nodeGeometries[val], material);
   sphere.name = node.name; // Add label
   if (addData) {
@@ -130,7 +139,7 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim) {
             .setCrossOrigin( '*' )
             //.load( node.imageUrl + performance.now(), function ( image ) {
             .load( node.imageUrl, function ( image ) {
-                addSprite(node, image, spriteGroup, false);
+                //addSprite(node, image, spriteGroup, false);
                 addSphere(node, image, nodeSphereGroup, true);
             },
               undefined,
@@ -180,8 +189,10 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
         }
 
         if(displayText) {
+          console.log(displayText);
           const centerOffset = -0.5 * ( displayText.geometry.boundingBox.max.x - displayText.geometry.boundingBox.min.x );
-          displayText.position.x = centerOffset + pos.x;
+          //displayText.position.x = centerOffset + pos.x;
+          displayText.position.x = pos.x;
           displayText.position.y = pos.y;
           displayText.position.z = pos.z;
         }
