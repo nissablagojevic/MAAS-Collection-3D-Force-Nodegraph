@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import fontJson from '../assets/lineto-circular.json';
 
 //import {MeshLine} from 'three.meshline';
 
 //3d stuff
 export const CAMERA_DISTANCE2NODES_FACTOR = 150;
 export const MAX_FRAMES = 1000;
+export const FONT_URL = 'http://localhost:3000/lineto-circular.json';
 
 export function resizeCanvas(renderer, camera, width = 1000, height = 300) {
     if (width && height) {
@@ -66,11 +68,43 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nod
               function() {
                 //Image loading error nodes.
                 const material = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5, depthTest: true } );
+                const textMaterials = [
+                  new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
+                  new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
+                ];
+
+                const fontLoader = new THREE.FontLoader();
+
+                //yeah, need to properly load this.
+                fontLoader.load( FONT_URL,
+                  function ( font ) {
+                    const geometry = new THREE.TextGeometry( node.name, {
+                      font: font,
+                      size: 5,
+                      height: 5,
+                      curveSegments: 2
+                    });
+
+                    geometry.computeBoundingBox();
+                    const textMesh = new THREE.Mesh( geometry, textMaterials );
+                    textMesh.__data = node;
+                    graphGroup.add(node.displayText = textMesh);
+                  },
+                  function (xhr) {
+                    console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+                  },
+                  function(err) {
+                    console.log( 'An error happened' );
+                    console.log(err);
+                  });
+
+
+
+                /**
                 const sphere = new THREE.Mesh(nodeGeometries[val], material);
                 sphere.name = node.name; // Add label
                 sphere.__data = node; // Attach node data
-                console.log('errorrrr');
-                graphGroup.add(node.mesh = sphere);
+                graphGroup.add(node.mesh = sphere);**/
             });
 
 
@@ -116,8 +150,9 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
     mappedData.nodes.forEach(node => {
         const mesh = node.mesh;
         const sprite = node.img;
+        const displayText = node.displayText;
 
-        if (!mesh && !sprite) return;
+        //if (!mesh && !sprite) return;
 
         const pos = isD3Sim ? node : layout.getNodePosition(node[nodeIdField]);
 
@@ -131,6 +166,13 @@ export function update3dStuff(mappedData, layout, isD3Sim, nodeIdField) {
           sprite.position.x = pos.x;
           sprite.position.y = pos.y;
           sprite.position.z = pos.z;
+        }
+
+        if(displayText) {
+          const centerOffset = -0.5 * ( displayText.geometry.boundingBox.max.x - displayText.geometry.boundingBox.min.x );
+          displayText.position.x = centerOffset + pos.x;
+          displayText.position.y = pos.y;
+          displayText.position.z = pos.z;
         }
 
     });
