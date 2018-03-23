@@ -66,6 +66,7 @@ class NodeGraph extends Component {
 
         //the graphGroup is there for all of our nodes and links, our main actors.
         this.graphGroup = new THREE.Group();
+        this.graphGroup.name = "graphGroup";
 
         //our 3D node manifestation
         this.lineMat = new THREE.LineBasicMaterial({
@@ -315,7 +316,7 @@ class NodeGraph extends Component {
 
         if(this._frameId) {
             this._frameId();
-        };
+        }
 
         //default escape hatch with counter until we figure out if qwest's promise is hammering the server
         //note, stopping the animation loop prevents mouse controls from firing too
@@ -345,7 +346,7 @@ class NodeGraph extends Component {
                 //add our 3d manifestation of nodes and links
                 const isD3Sim = this.forceEngine !== 'ngraph';
                 //lol
-                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim, this.lineMat, this.sphereMat, this.nodeTexture);
+                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
             }
 
             //console.log(graphData);
@@ -367,10 +368,41 @@ class NodeGraph extends Component {
             }
         }
 
+        let lineGroup;
+        let nodeSphereGroup;
+        let spriteGroup;
+        let textGroup;
+
+        for (let i = 0; i < this.graphGroup.children.length; i++) {
+            switch(this.graphGroup.children[i].name) {
+              case 'lineGroup':
+                lineGroup = this.graphGroup.children[i];
+                break;
+              case 'nodeSphereGroup':
+                  nodeSphereGroup = this.graphGroup.children[i];
+                  break;
+              case 'spriteGroup':
+                spriteGroup = this.graphGroup.children[i];
+                break;
+              case 'textGroup':
+                textGroup = this.graphGroup.children[i];
+                  break;
+              default:
+            }
+
+            if(textGroup) {
+                for (let i = 0; i < textGroup.children.length; i++) {
+                    textGroup.children[i].lookAt(this.camera.position);
+                }
+            }
+        }
+
+
+
         this.raycaster.setFromCamera(this.mousePos, this.camera);
         this.tbControls.update();
 
-        //this is the important bit. After we've dicked with the mainScene's (or just its children's contents),
+        //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
         //the renderer needs to shove the frame to the screen
         this.renderer.render(this.mainScene, this.camera);
         if(this.state.animating) {
@@ -378,7 +410,7 @@ class NodeGraph extends Component {
             window.requestAnimationFrame( this.animate );
         }
         //emergency counter escape hatch only for testing to stop the looping after max frames are hit.
-        this.counter++;
+        //this.counter++;
 
     }
     /**ANIMATING STUFF ENDS HERE**/

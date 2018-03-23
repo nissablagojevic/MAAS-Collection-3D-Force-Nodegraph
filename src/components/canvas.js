@@ -8,6 +8,15 @@ export const CAMERA_DISTANCE2NODES_FACTOR = 150;
 export const MAX_FRAMES = 1000;
 export const FONT_URL = 'http://localhost:3000/lineto-circular.json';
 
+
+const lineMaterials = new THREE.LineBasicMaterial({
+  color: '#ffffff',
+  lineWidth: 10,
+  transparent: true,
+  opacity: 0.5
+});
+
+
 export function resizeCanvas(renderer, camera, width = 1000, height = 300) {
     if (width && height) {
         renderer.setSize(width, height);
@@ -24,123 +33,125 @@ export function getOffset(el) {
     return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
 }
 
-export function add3dStuff(data, graphGroup, layout, isD3Sim, lineMaterials, nodeMaterials, nodeTexture) {
+function addSprite(node, image, graphGroup, addData = false) {
+  //if we have an image for the node, put it in there with its sphere
+  const texture = new THREE.CanvasTexture( image );
+
+  const spriteMaterial = new THREE.SpriteMaterial( { map: texture, color: 0xffffff, depthTest: false } );
+  const sprite = new THREE.Sprite( spriteMaterial );
+  sprite.scale.set(spriteMaterial.map.image.width/15, spriteMaterial.map.image.height/15, 1);
+  if (addData) {
+    sprite.__data = node;
+  }
+  graphGroup.add(node.img = sprite);
+}
+
+function addSphere(node, image, graphGroup, addData = false) {
+  const nodeGeometries = {};
+  //const nodeMaterials = {};
+  const nodeRelSize = 20;
+  const nodeResolution = 10;
+
+  //this val would affect the radius of the sphere, but we don't have info mapped to that.
+  const val = 1;
+  if (!nodeGeometries.hasOwnProperty(val)) {
+    nodeGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
+  }
+  const material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.1, depthTest: false } );
+  const sphere = new THREE.Mesh(nodeGeometries[val], material);
+  sphere.name = node.name; // Add label
+  if (addData) {
+    sphere.__data = node; // Attach node data
+  }
+  graphGroup.add(node.mesh = sphere);
+}
+
+function addText(node, graphGroup) {
+  const textMaterials = [
+    new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
+    new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
+  ];
+
+  const fontLoader = new THREE.FontLoader();
+
+  //yeah, need to properly load this.
+  fontLoader.load( FONT_URL,
+    function ( font ) {
+      const geometry = new THREE.TextGeometry( node.name, {
+        font: font,
+        size: 5,
+        height: 5,
+        curveSegments: 2
+      });
+
+      geometry.computeBoundingBox();
+      const textMesh = new THREE.Mesh( geometry, textMaterials );
+      textMesh.__data = node;
+      graphGroup.add(node.displayText = textMesh);
+    },
+    function (xhr) {
+      console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+    },
+    function(err) {
+      console.log( 'An error happened' );
+      console.log(err);
+    });
+}
+
+function addLine(link, graphGroup) {
+  //for 1px lines
+  //each vertex stores 3 position values (x,y,z) and there are 2 of those, so 2 * 3 Typed Array.
+  const geometry = new THREE.BufferGeometry();
+  geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(2 * 3), 3));
+  const line = new THREE.Line(geometry, lineMaterials);
+
+  line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
+  graphGroup.add(link.__line = line);
+}
+
+export function add3dStuff(data, graphGroup, layout, isD3Sim) {
 
     //node and link 3d properties
-    //const lineMaterials = {}; // indexed by color
-    const nodeGeometries = {};
-    //const nodeMaterials = {};
-    const nodeRelSize = 20;
-    const nodeResolution = 10;
+
+    const textGroup = new THREE.Group();
+    const spriteGroup = new THREE.Group();
+    const nodeSphereGroup = new THREE.Group();
+    const lineGroup = new THREE.Group();
+
+    textGroup.name = "textGroup";
+    spriteGroup.name = "spriteGroup";
+    nodeSphereGroup.name = "nodeSphereGroup";
+    lineGroup.name = "lineGroup";
 
     //map the newly created nodes to spheres
     data.nodes.forEach(node => {
-        //this val would affect the radius of the sphere, but we don't have info mapped to that.
-        const val = 1;
-        if (!nodeGeometries.hasOwnProperty(val)) {
-            nodeGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
-        }
 
-        //TEMPORARY UNTIL I GET CORS GOING ON SERVER
-        //node.imageUrl = 'https://instagram.fmel1-1.fna.fbcdn.net/vp/7fcb02c925afda63874bcfdde952bc0b/5B28F33C/t51.2885-15/s640x640/sh0.08/e35/28754685_1920615668236824_3043251162649198592_n.jpg';
         new THREE.ImageLoader()
             .setCrossOrigin( '*' )
             //.load( node.imageUrl + performance.now(), function ( image ) {
             .load( node.imageUrl, function ( image ) {
-                //if we have an image for the node, put it in there with its sphere
-                const texture = new THREE.CanvasTexture( image );
-                const material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.1, depthTest: false } );
-
-                const spriteMaterial = new THREE.SpriteMaterial( { map: texture, color: 0xffffff, depthTest: false } );
-                const sprite = new THREE.Sprite( spriteMaterial );
-                sprite.scale.set(spriteMaterial.map.image.width/15, spriteMaterial.map.image.height/15, 1);
-
-                const sphere = new THREE.Mesh(nodeGeometries[val], material);
-                sphere.name = node.name; // Add label
-                sphere.__data = node; // Attach node data
-
-
-                graphGroup.add(node.mesh = sphere);
-                graphGroup.add(node.img = sprite);
-
+                addSprite(node, image, spriteGroup, false);
+                addSphere(node, image, nodeSphereGroup, true);
             },
               undefined,
               function() {
                 //Image loading error nodes.
-                const material = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5, depthTest: true } );
-                const textMaterials = [
-                  new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
-                  new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
-                ];
-
-                const fontLoader = new THREE.FontLoader();
-
-                //yeah, need to properly load this.
-                fontLoader.load( FONT_URL,
-                  function ( font ) {
-                    const geometry = new THREE.TextGeometry( node.name, {
-                      font: font,
-                      size: 5,
-                      height: 5,
-                      curveSegments: 2
-                    });
-
-                    geometry.computeBoundingBox();
-                    const textMesh = new THREE.Mesh( geometry, textMaterials );
-                    textMesh.__data = node;
-                    graphGroup.add(node.displayText = textMesh);
-                  },
-                  function (xhr) {
-                    console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-                  },
-                  function(err) {
-                    console.log( 'An error happened' );
-                    console.log(err);
-                  });
-
-
-
-                /**
-                const sphere = new THREE.Mesh(nodeGeometries[val], material);
-                sphere.name = node.name; // Add label
-                sphere.__data = node; // Attach node data
-                graphGroup.add(node.mesh = sphere);**/
+                addText(node, textGroup);
             });
 
 
-        /**
-         if (!nodeMaterials.hasOwnProperty('color')) {
-            nodeMaterials['color'] = new THREE.MeshLambertMaterial({
-                color: '#ffffaa',
-                transparent: true,
-                opacity: 0.75
-            });
-        }**/
 
     });
 
     //map the newly created links to lines in THREE.js and add them to the scene
     data.links.forEach(link => {
-        if (!lineMaterials.hasOwnProperty('color')) {
-            lineMaterials['color'] = new THREE.LineBasicMaterial({
-                color: '#ffffff',
-                lineWidth: 10,
-                transparent: true,
-                opacity: 0.5
-            });
-        }
-
-        //for 1px lines
-        //each vertex stores 3 position values (x,y,z) and there are 2 of those, so 2 * 3 Typed Array.
-        const geometry = new THREE.BufferGeometry();
-        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(2 * 3), 3));
-        const line = new THREE.Line(geometry, lineMaterials);
-
-        line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
-        graphGroup.add(link.__line = line);
+        addLine(link, lineGroup);
     });
 
-
+    graphGroup.add(lineGroup);
+    graphGroup.add(nodeSphereGroup);
+    graphGroup.add(textGroup);
+    graphGroup.add(spriteGroup);
 
 }
 
