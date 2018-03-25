@@ -8,6 +8,7 @@ import './Nodegraph.css';
 import * as THREE from 'three';
 import trackballControls from 'three-trackballcontrols';
 import {add3dStuff, update3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
+import { addEnv } from '../3d';
 import dat from 'dat.gui';
 
 //force graphing
@@ -49,14 +50,9 @@ class NodeGraph extends Component {
         this.counter = 0;
         this._frameId = null;
 
-        //the mainscene is there to hold our lights and viewfog or other globally stuff
-        //feel free to add objects that aren't going to change to it too if the rendering isn't working
+        //the mainscene is there to hold our 3d graph but also lights and viewfog or other globally stuff
         this.mainScene = new THREE.Scene();
-        this.mainScene.background = new THREE.Color(0, 0, 0);
 
-        //fiat lux
-        this.ambientLight = new THREE.AmbientLight(0xbbbbbb);
-        this.directLight = new THREE.DirectionalLight(0xffffff, 0.6);
 
         // Capture mouse coords on move
         this.raycaster = new THREE.Raycaster();
@@ -68,34 +64,9 @@ class NodeGraph extends Component {
         this.graphGroup = new THREE.Group();
         this.graphGroup.name = "graphGroup";
 
-        //our 3D node manifestation
-        this.lineMat = new THREE.LineBasicMaterial({
-            color: '#ffffff',
-            lineWidth: 10,
-            transparent: true,
-            opacity: 0.8
-        });
+        this.mainScene.add(this.graphGroup);
 
-        this.sphereMat = new THREE.MeshBasicMaterial( {
-            color: '#ffffff',
-            transparent: true,
-            opacity: 0.6
-        } );
-
-
-        /**
-         *
-         *     //node and link 3d properties
-         const lineMaterials = {}; // indexed by color
-         const sphereGeometries = {};
-         const sphereMaterials = {};
-         const nodeRelSize = 10;
-         const nodeResolution = 10;
-         */
-
-        this.mainScene.add(this.graphGroup)
-            .add(this.ambientLight)
-            .add(this.directLight);
+        addEnv(this.mainScene);
 
         //d3 force stuff
         this.d3ForceLayout = d3.forceSimulation()
@@ -143,24 +114,12 @@ class NodeGraph extends Component {
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
             console.log('qwest get');
             this.setState({responseData: response.data});
-            //this.updateScene();
-            //this used to be where and how we called the 3d force graph package we just cannibalised.
-            /**nodeGraph(document.getElementById('nodegraph'))
-             .cooldownTicks(300)
-             .idField('id')
-             .valField('val')
-             .nameField('name')
-             .autoColorBy('type')
-             .forceEngine('ngraph')
-             .graphData(graphData);**/
-
         }).catch(function(e, xhr, response) {
             // Process the error in getting the json file
             console.log('DATA RETRIEVAL ERROR');
             console.log(e);
         });
 
-        this.initGui();
         //start requestAnimationFrame checker;
         this.startLoop();
         //or just initial frame for testing purposes
@@ -172,10 +131,47 @@ class NodeGraph extends Component {
     initGui() {
 
         const gui = new dat.GUI();
-        let lineMat = this.lineMat;
-        let sphereMat = this.sphereMat;
+        const scene = this.mainScene;
+        const graphGroup = this.graphGroup;
+        const lines = graphGroup.getObjectByProperty('name', 'lineGroup');
+        const textNodes = graphGroup.getObjectByProperty('name', 'textGroup');
+        const nodeSpheres = graphGroup.getObjectByProperty('name', 'nodeSphereGroup');
+        const sprites = graphGroup.getObjectByProperty('name', 'spriteGroup');
+
+        const param = {};
+
+        if(scene && scene.fog) {
+            param.sceneFogColor = scene.fog.color.getHex();
+            param.sceneFogNear = scene.fog.near;
+            param.sceneFogFar = scene.fog.far;
+        }
+
+        if(lines && lines.children.length) {
+            console.log(lines.children[0]);
+            param.lineMaterial = lines.children[0].material;
+            param.lineColor = param.lineMaterial.color.getHex();
+        }
 
 
+
+        var sceneFolder = gui.addFolder('Scene');
+
+        if (param.sceneFogColor) {
+            sceneFolder.addColor(param, 'sceneFogColor').onChange(function(val){
+                scene.fog.color = new THREE.Color(val);
+            });
+        }
+
+        var linkFolder = gui.addFolder('Links');
+
+        if (param.lineMaterial && param.lineColor) {
+            linkFolder.addColor(param, 'lineColor').onChange(function(val){
+                console.log(val);
+            });
+
+        }
+
+        /**
         var param = {
             lineOpacity: lineMat.opacity,
             lineColor: lineMat.color.getHex(),
@@ -201,7 +197,7 @@ class NodeGraph extends Component {
         });
         nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
             sphereMat.opacity = val;
-        } );
+        } );**/
 
     }
 
@@ -217,14 +213,9 @@ class NodeGraph extends Component {
         //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
         //not fetching data again.
         if (prevProps !== this.props) {
-            console.log("REGET");
-            console.log(this);
-
             qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
-                console.log('qwest get');
-                console.log(this);
+                console.log('qwest reget');
                 this.setState({fetchingJson: false, responseData: response.data});
-                //this.responseData = response.data;
             }).catch(function (e, xhr, response) {
                 // Process the error in getting the json file
                 console.log('DATA RETRIEVAL ERROR');
@@ -312,17 +303,12 @@ class NodeGraph extends Component {
 
 
     animate(prevProps, prevState) {
-        //console.log(this.counter);
-
         if(this._frameId) {
             this._frameId();
         }
 
-        //default escape hatch with counter until we figure out if qwest's promise is hammering the server
         //note, stopping the animation loop prevents mouse controls from firing too
         if (!this.state.animating) {
-            //if ((MAX_FRAMES && this.counter > MAXFRAMES) || !this.state.animating) {
-
                 //the renderer owns the mainScene
             console.log(this.renderer);
             //the mainScene owns the children AmbientLight, DirectLight, and our Graph group...
@@ -338,8 +324,6 @@ class NodeGraph extends Component {
         if(!this.state.fetchingJson && sourceUrl && this.state.responseData !== null) {
             //this really only should ever execute once per query, ensure it.
             this.setState({fetchingJson: true, mappedData: mapData(this.state.responseData)});
-            console.log(prevProps);
-            console.log(prevState);
 
             //only map data if the state has changed
             if(prevState !== this.state) {
@@ -347,57 +331,28 @@ class NodeGraph extends Component {
                 const isD3Sim = this.forceEngine !== 'ngraph';
                 //lol
                 add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
+                this.initGui();
             }
-
-            //console.log(graphData);
-            /**TEST CUBE AGAIN for animation purposes, may not be able to see it beneath any added spheres though**/
-            /**this.mainScene.add( cube );
-            cube.rotation.x += 0.1;
-            cube.rotation.y += 0.1;**/
         }
 
 
         if (this.camera.position.x === 0 && this.camera.position.y === 0) {
             // If camera still in default position (not user modified)
             this.camera.lookAt(this.graphGroup.position);
+
+            //we're assuming that we're working in narratives here, and only on one.
             if(this.state.responseData !== null && this.state.responseData.hasOwnProperty('narratives')) {
-                //we're assuming that we're working in narratives here, and only on one.
-                //console.log(this.state.responseData.narratives[0].objects.length);
                 this.camera.position.z = Math.cbrt(this.state.responseData.narratives[0].objects.length) * CAMERA_DISTANCE2NODES_FACTOR;
-
             }
         }
 
-        let lineGroup;
-        let nodeSphereGroup;
-        let spriteGroup;
-        let textGroup;
+        const textGroup = this.graphGroup.getObjectByProperty('name', 'textGroup');
 
-        for (let i = 0; i < this.graphGroup.children.length; i++) {
-            switch(this.graphGroup.children[i].name) {
-              case 'lineGroup':
-                lineGroup = this.graphGroup.children[i];
-                break;
-              case 'nodeSphereGroup':
-                  nodeSphereGroup = this.graphGroup.children[i];
-                  break;
-              case 'spriteGroup':
-                spriteGroup = this.graphGroup.children[i];
-                break;
-              case 'textGroup':
-                textGroup = this.graphGroup.children[i];
-                  break;
-              default:
-            }
-
-            if(textGroup) {
-                for (let i = 0; i < textGroup.children.length; i++) {
-                    textGroup.children[i].lookAt(this.camera.position);
-                }
+        if(textGroup && textGroup.children) {
+            for (let i = 0; i < textGroup.children.length; i++) {
+                textGroup.children[i].lookAt(this.camera.position);
             }
         }
-
-
 
         this.raycaster.setFromCamera(this.mousePos, this.camera);
         this.tbControls.update();
@@ -405,13 +360,11 @@ class NodeGraph extends Component {
         //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
         //the renderer needs to shove the frame to the screen
         this.renderer.render(this.mainScene, this.camera);
+
         if(this.state.animating) {
             //and the window needs to request a new frame to do this all again
             window.requestAnimationFrame( this.animate );
         }
-        //emergency counter escape hatch only for testing to stop the looping after max frames are hit.
-        //this.counter++;
-
     }
     /**ANIMATING STUFF ENDS HERE**/
 
@@ -429,35 +382,40 @@ class NodeGraph extends Component {
         this.mousePos.y = -(relPos.y / this.state.height) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mousePos, this.camera);
-        //check if our raycasted click event collides with something rendered in our graph group
-        const intersects = this.raycaster.intersectObjects(this.graphGroup.children)
-            .filter(o => o.object.__data); // Check only objects with data (nodes)
-        //if our mouseover collides with a node
-        if (intersects.length) {
-            this.tooltip.innerHTML = intersects[0].object.__data.id + ": " + intersects[0].object.__data.name;
-        } else {
-            this.tooltip.innerHTML = '';
+        //check if our raycasted click event collides with a nodesphere
+        if(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup')) {
+            const intersects = this.raycaster.intersectObjects(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup').children)
+                .filter(o => o.object.__data); // Check only objects with data (nodes)
+            //if our mouseover collides with a node
+            if (intersects.length) {
+                this.tooltip.style.padding = 10 + 'px';
+                this.tooltip.style.backgroundColor = 'black';
+                this.tooltip.innerHTML = intersects[0].object.__data.id + ": " + intersects[0].object.__data.name;
+            } else {
+                this.tooltip.style.backgroundColor = 'transparent';
+                this.tooltip.innerHTML = '';
+            }
+
+            // Move tooltip
+            this.tooltip.style.top = (relPos.y - 20) + 'px';
+            this.tooltip.style.left = (relPos.x - 20) + 'px';
         }
 
-        // Move tooltip
-        this.tooltip.style.top = (relPos.y - 20) + 'px';
-        this.tooltip.style.left = (relPos.x - 20) + 'px';
 
     }
 
     handleClick() {
             //update our raycaster's position with the mouse position coordinates and camera info
             this.raycaster.setFromCamera(this.mousePos, this.camera);
-            //check if our raycasted click event collides with something rendered in our graph group
-            const intersects = this.raycaster.intersectObjects(this.graphGroup.children)
+            //check if our raycasted click event collides with a nodesphere
+            const intersects = this.raycaster.intersectObjects(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup').children)
                 .filter(o => o.object.__data); // Check only objects with data (nodes)
+
             //if our click collided with a node
             if (intersects.length) {
                 //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-                this.selectedNode = intersects[0].object.__data.id;
-
+                this.selectedNode = intersects[0].object.__data.name;
                 console.log(this.selectedNode);
-
             }
     }
 
@@ -465,8 +423,6 @@ class NodeGraph extends Component {
 
 
     render() {
-        //this renders only the FIRST FRAME, animation begins in component did mount with startloop;
-        //renderer.render(this.mainScene, camera);
         return (
             <div id="nodegraph" ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}>
                 <div ref={tooltip => this.tooltip = tooltip} className="graph-tooltip" />
