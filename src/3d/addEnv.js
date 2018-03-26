@@ -1,20 +1,33 @@
 import * as THREE from 'three';
 
-export default function addEnv(scene) {
+export default function addEnv(scene, ambientLight = null, directLight = null, skyBoxTexture = null, viewFog = null) {
     //fiat lux
-    const ambientLight = new THREE.AmbientLight(0xbbbbbb);
-    const directLight = new THREE.DirectionalLight(0xffffff, 0.6);
 
-    /**
-     const viewFog = new THREE.Fog(0xfff189, 1, 1000);
-     scene.fog = viewFog;**/
+    let urls;
 
-    // Textures
-    var r = "http://localhost:3000/";
+    if(!ambientLight) {
+        ambientLight = new THREE.AmbientLight(0xbbbbbb);
+    }
+
+    if(!directLight) {
+        directLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    }
+
+    if(!skyBoxTexture) {
+        // Textures
+        const r = "http://localhost:3000/";
+        urls = [ r + "spacetex.jpg", r + "spacetex.jpg",
+            r + "spacetex.jpg", r + "spacetex.jpg",
+            r + "spacetex.jpg", r + "spacetex.jpg" ];
+    }
+
+    if(!viewFog) {
+        viewFog = new THREE.Fog(0xfff189, 1, 1000);
+    }
+
+    scene.fog = viewFog;
+
     //pos x, neg x, pos y, neg y, pos z, neg z
-    var urls = [ r + "spacetex.jpg", r + "spacetex.jpg",
-        r + "spacetex.jpg", r + "spacetex.jpg",
-        r + "spacetex.jpg", r + "spacetex.jpg" ];
 
     //texture must be width = height and ideally width = 2^n
     const textureCube = new THREE.CubeTextureLoader().load( urls );
@@ -23,20 +36,20 @@ export default function addEnv(scene) {
 
     var cubeShader = THREE.ShaderLib[ "cube" ];
 
-
     var cubeMaterial = new THREE.ShaderMaterial( {
         fragmentShader: cubeShader.fragmentShader,
         vertexShader: cubeShader.vertexShader,
         uniforms: cubeShader.uniforms,
         depthWrite: false,
         side: THREE.BackSide,
-        //fog: true
+        fog: true
     } );
     cubeMaterial.uniforms[ "tCube" ].value = textureCube;
     // Skybox
     const cubeMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 10000, 10000, 10000 ), cubeMaterial );
     cubeMesh.name = "skybox";
-    scene.add( cubeMesh )
+    scene
+        //.add( cubeMesh )
         .add( ambientLight )
         .add( directLight );
 }

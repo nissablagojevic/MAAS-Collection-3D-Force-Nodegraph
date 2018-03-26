@@ -6,7 +6,6 @@ import './Nodegraph.css';
 
 //3d stuff
 import * as THREE from 'three';
-import trackballControls from 'three-trackballcontrols';
 import {add3dStuff, update3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
 import { addEnv } from '../3d';
 import dat from 'dat.gui';
@@ -17,14 +16,10 @@ import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 
-
-
-/*** TEST CUBE
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-var cube = new THREE.Mesh( geometry, material );
-mainScene.add( cube );
-camera.position.z = 5;**/
+//3d continued... controls.
+//have to import controls as non-ES6 because of scoping issues.
+//see https://stackoverflow.com/questions/28068038/how-do-i-import-additional-plugins-for-an-already-imported-library-using-jspm
+const OrbitControls = require('three-orbit-controls')(THREE);
 
 class NodeGraph extends Component {
     constructor() {
@@ -45,6 +40,7 @@ class NodeGraph extends Component {
         this.camera = new THREE.PerspectiveCamera();
         this.camera.position.z = 5;
         this.camera.far = 20000;
+        this.controls = null;
 
         //animation frame counter and the somewhat magical _frameId
         this.counter = 0;
@@ -97,18 +93,27 @@ class NodeGraph extends Component {
         this.handleClick = this.handleClick.bind(this);
         this.renderer.domElement.addEventListener("mousemove", this.mouseMove);
         this.renderer.domElement.addEventListener("click", this.handleClick);
+
     }
 
     componentDidMount() {
         //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
         this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
+        resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
         //has updated the component with the proper width and height, and there's fallback values
         this.mount.appendChild(this.renderer.domElement);
 
         // Add camera interaction and mousebased input
-        this.tbControls = new trackballControls(this.camera, this.renderer.domElement);
+        this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+
+        this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+        this.controls.dampingFactor = 0.25;
+        //this.controls.panningMode = THREE.HorizontalPanning; // default is THREE.ScreenSpacePanning
+        this.controls.minDistance = 1;
+        this.controls.maxDistance = 10000;
+        this.controls.maxPolarAngle = Math.PI;
 
         //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
@@ -144,6 +149,7 @@ class NodeGraph extends Component {
             param.sceneFogColor = scene.fog.color.getHex();
             param.sceneFogNear = scene.fog.near;
             param.sceneFogFar = scene.fog.far;
+            param.sceneFogVisible = scene.fog;
         }
 
         if(lines && lines.children.length) {
@@ -151,8 +157,6 @@ class NodeGraph extends Component {
             param.lineMaterial = lines.children[0].material;
             param.lineColor = param.lineMaterial.color.getHex();
         }
-
-
 
         var sceneFolder = gui.addFolder('Scene');
 
@@ -162,13 +166,24 @@ class NodeGraph extends Component {
             });
         }
 
+        if (param.sceneFogNear) {
+            sceneFolder.add(param, 'sceneFogNear', 0, 10000, 1).onChange(function(val){
+                scene.fog.near = val;
+            });
+        }
+
+        if (param.sceneFogFar) {
+            sceneFolder.add(param, 'sceneFogFar', 0, 10000, 1).onChange(function(val){
+                scene.fog.far = val;
+            });
+        }
+
         var linkFolder = gui.addFolder('Links');
 
         if (param.lineMaterial && param.lineColor) {
             linkFolder.addColor(param, 'lineColor').onChange(function(val){
-                console.log(val);
+                //console.log(lines.getObjectByProperty('type', 'LineBasicMaterial'));
             });
-
         }
 
         /**
@@ -355,7 +370,8 @@ class NodeGraph extends Component {
         }
 
         this.raycaster.setFromCamera(this.mousePos, this.camera);
-        this.tbControls.update();
+        //this.tbControls.update();
+        this.controls.update();
 
         //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
         //the renderer needs to shove the frame to the screen

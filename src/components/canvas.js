@@ -5,7 +5,7 @@ import { addLine, addSprite, addSphere, addText, addEnv } from '../3d';
 export const CAMERA_DISTANCE2NODES_FACTOR = 150;
 export const MAX_FRAMES = 1000;
 
-export function resizeCanvas(renderer, camera, width = 1000, height = 300) {
+export function resizeCanvas(renderer, camera, width, height) {
     if (width && height) {
         renderer.setSize(width, height);
         camera.aspect = width/height;

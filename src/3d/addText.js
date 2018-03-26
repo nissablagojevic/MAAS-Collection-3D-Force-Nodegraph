@@ -2,11 +2,13 @@ import * as THREE from 'three';
 
 const FONT_URL = 'http://localhost:3000/lineto-circular.json';
 
-export default function addText(node, graphGroup) {
-    const textMaterials = [
-        new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
-        new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
-    ];
+export default function addText(node, graphGroup, textMaterials = null) {
+    if (!textMaterials) {
+        textMaterials = [
+            new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
+            new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
+        ];
+    }
 
     const fontLoader = new THREE.FontLoader();
 
