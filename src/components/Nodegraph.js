@@ -16,10 +16,14 @@ import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 
+//leap controls
+import {initLeapControls} from "../leap";
+
 //3d continued... controls.
 //have to import controls as non-ES6 because of scoping issues.
 //see https://stackoverflow.com/questions/28068038/how-do-i-import-additional-plugins-for-an-already-imported-library-using-jspm
 const OrbitControls = require('three-orbit-controls')(THREE);
+
 
 class NodeGraph extends Component {
     constructor() {
@@ -107,13 +111,21 @@ class NodeGraph extends Component {
 
         // Add camera interaction and mousebased input
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-
         this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         this.controls.dampingFactor = 0.25;
         //this.controls.panningMode = THREE.HorizontalPanning; // default is THREE.ScreenSpacePanning
         this.controls.minDistance = 1;
         this.controls.maxDistance = 10000;
         this.controls.maxPolarAngle = Math.PI;
+
+
+      var spheres = {};
+      function moveSphere(Sphere, posX, posY, posZ, rotX, rotY, rotZ) {
+        Sphere.style.webkitTransform = Sphere.style.mozTransform =
+          Sphere.style.transform = "translateX("+posX+"px) translateY("+posY+"px) translateZ("+posZ+"px) rotateX("+rotX+"deg) rotateY(0deg) rotateZ(0deg)";
+      }
+
+        initLeapControls();
 
         //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {

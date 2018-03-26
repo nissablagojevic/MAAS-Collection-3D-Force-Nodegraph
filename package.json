@@ -8,6 +8,7 @@
     "bootstrap": "^3.3.7",
     "dat.gui": "^0.7.1",
     "graphql": "^0.10.3",
+    "leapjs": "^0.6.4",
     "qwest": "^4.5.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
