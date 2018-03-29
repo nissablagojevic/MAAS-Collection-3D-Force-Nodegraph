@@ -1,25 +1,25 @@
 import * as THREE from 'three';
 
-const FONT_URL = 'http://localhost:3000/lineto-circular.json';
-
 export default function addText(node, graphGroup, textMaterials = null) {
     if (!textMaterials) {
         textMaterials = [
-            new THREE.MeshBasicMaterial({color: 0xffffff, overdraw: 0.5 }),
-            new THREE.MeshBasicMaterial( { color: 0x000000, overdraw: 0.5 } )
+            new THREE.MeshBasicMaterial({
+              color: 0xffffff
+            }),
+            new THREE.MeshBasicMaterial( { color: 0x000000} )
         ];
     }
 
     const fontLoader = new THREE.FontLoader();
 
-    //yeah, need to properly load this.
-    fontLoader.load( FONT_URL,
+    //yeah, need to properly bundle this.
+    fontLoader.load( 'lineto-circular.json',
         function ( font ) {
             const geometry = new THREE.TextGeometry( node.name, {
                 font: font,
                 size: 5,
                 height: 5,
-                curveSegments: 2
+                curveSegments: 5
             });
 
             geometry.computeBoundingBox();

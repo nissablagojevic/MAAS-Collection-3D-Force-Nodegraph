@@ -36,11 +36,12 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim) {
     nodeSphereGroup.name = "nodeSphereGroup";
     lineGroup.name = "lineGroup";
 
+    const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
+
     //map the newly created nodes to spheres
     data.nodes.forEach(node => {
 
-        new THREE.ImageLoader()
-            .setCrossOrigin( '*' )
+      imageLoader
             //.load( node.imageUrl + performance.now(), function ( image ) {
             .load( node.imageUrl, function ( image ) {
                 //addSprite(node, image, spriteGroup, false);

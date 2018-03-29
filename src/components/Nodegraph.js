@@ -17,7 +17,7 @@ import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 
 //leap controls
-import {initLeapControls} from "../leap";
+import {initLeapControls, swipe} from "../leap";
 
 //3d continued... controls.
 //have to import controls as non-ES6 because of scoping issues.
@@ -40,9 +40,11 @@ class NodeGraph extends Component {
 
         //3D STUFF with THREE.JS
         //we need something to render with and something to see the render with
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({
+          antialias: true,
+        });
         this.camera = new THREE.PerspectiveCamera();
-        this.camera.position.z = 5;
+        this.camera.position.z = 2000;
         this.camera.far = 20000;
         this.controls = null;
 
@@ -109,6 +111,9 @@ class NodeGraph extends Component {
         //has updated the component with the proper width and height, and there's fallback values
         this.mount.appendChild(this.renderer.domElement);
 
+        //add leap controller swipe catcher
+
+
         // Add camera interaction and mousebased input
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
         this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
@@ -118,14 +123,9 @@ class NodeGraph extends Component {
         this.controls.maxDistance = 10000;
         this.controls.maxPolarAngle = Math.PI;
 
-
-      var spheres = {};
-      function moveSphere(Sphere, posX, posY, posZ, rotX, rotY, rotZ) {
-        Sphere.style.webkitTransform = Sphere.style.mozTransform =
-          Sphere.style.transform = "translateX("+posX+"px) translateY("+posY+"px) translateZ("+posZ+"px) rotateX("+rotX+"deg) rotateY(0deg) rotateZ(0deg)";
-      }
-
         initLeapControls();
+        var swiper = window.controller.gesture('swipe');
+        swiper.update((g) => swipe(g));
 
         //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {

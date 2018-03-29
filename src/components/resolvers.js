@@ -3,6 +3,8 @@ import mapLink from '../schemas/link.js';
 
 //graphql data
 export const sourceUrl = 'https://api.maas.museum/graphql?query=';
+//antiquities 2087
+//botanical models and stuff 743
 export const sourceQuery = `{narratives(filter:{_id:2087}){
     _id
     title

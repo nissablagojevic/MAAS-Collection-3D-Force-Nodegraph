@@ -22,7 +22,7 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
     }
 
     if(!viewFog) {
-        viewFog = new THREE.Fog(0xfff189, 1, 1000);
+        viewFog = new THREE.Fog(0xfff189, 1, 10000);
     }
 
     scene.fog = viewFog;
