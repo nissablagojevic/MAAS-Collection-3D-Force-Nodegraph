@@ -9,7 +9,7 @@ export const nodeGeometries = {};
 //if we did, each sphere would need to be created within the addSphere method
 const val = 1;
 if (!nodeGeometries.hasOwnProperty(val)) {
-  nodeGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
+  nodeGeometries[val] = new THREE.SphereBufferGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
 }
 
 export default function addSphere(node, image, graphGroup, addData = false) {
@@ -20,10 +20,8 @@ export default function addSphere(node, image, graphGroup, addData = false) {
 
     const material = new THREE.MeshLambertMaterial(
     { color: 0xffffff,
-      transparent: true,
-      opacity: 1,
       reflectivity: 1,
-      envMap: texture
+      envMap: texture,
     } );
 
     const sphere = new THREE.Mesh(nodeGeometries[val], material);
