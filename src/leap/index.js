@@ -1,7 +1,8 @@
 import Leap from 'leapjs';
+import debounce from 'lodash/debounce';
 
 export function initLeapControls() {
-  Leap.loop(function(frame){
+  window.controller = Leap.loop({enableGestures:true},function(frame){
     var handIds = {};
     if (frame.hands === undefined ) {
       var handsLength = 0
@@ -17,7 +18,7 @@ export function initLeapControls() {
       var rotX = (hand._rotation[2]*90);
       var rotY = (hand._rotation[1]*90);
       var rotZ = (hand._rotation[0]*90);
-      console.log(hand);
+      //console.log(hand);
       /**var sphere = spheres[hand.id];
        if (!sphere) {
             var sphereDiv = document.getElementById("sphere").cloneNode(true);
@@ -34,4 +35,29 @@ export function initLeapControls() {
       handIds[hand.id] = true;
     }
   });
+
+  //var swiper = window.controller.gesture('swipe');
+  //swiper.update((g) => swipe(g));
+  window.controller.connect();
+}
+
+export function swipe(gesture, action = null) {
+  var cooloff = 300;
+  var tolerance = 50;
+  var x = -2, y = -2;
+
+  //debounce throttles responses for us
+  var slider = debounce(function(xDir, yDir) {
+    x += xDir;
+    y += yDir;
+    console.log("x:"+xDir);
+    console.log("y:"+yDir);
+  }, cooloff);
+
+  //determine direction
+  if (Math.abs(gesture.translation()[0]) > tolerance || Math.abs(gesture.translation()[1]) > tolerance) {
+    var xDir = Math.abs(gesture.translation()[0]) > tolerance ? (gesture.translation()[0] > 0 ? -1 : 1) : 0;
+    var yDir = Math.abs(gesture.translation()[1]) > tolerance ? (gesture.translation()[1] < 0 ? -1 : 1) : 0;
+    slider(xDir, yDir);
+  }
 }
