@@ -16,12 +16,13 @@ export default function addSphere(node, image, graphGroup, addData = false) {
     //prevent three.js complaining about images not being 2^n width and height
     texture.minFilter = THREE.LinearFilter;
     texture.mapping = THREE.SphericalReflectionMapping;
-    const material = new THREE.MeshLambertMaterial(
+    const material = new THREE.MeshPhongMaterial(
         { color: 0xffffff,
             transparent: true,
             opacity: 1,
             envMap: texture,
-            reflectivity: 1
+            reflectivity: 1,
+            shininess: 100
         } );
     const sphere = new THREE.Mesh(nodeGeometries[val], material);
     sphere.name = node.name; // Add label
