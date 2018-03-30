@@ -6,9 +6,9 @@ import './Nodegraph.css';
 
 //3d stuff
 import * as THREE from 'three';
-import {add3dStuff, update3dStuff, resizeCanvas, getOffset, CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES} from './canvas.js';
+import {CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES, GraphCanvas} from './canvas.js';
 import { addEnv } from '../3d';
-import dat from 'dat.gui';
+
 
 //force graphing
 import * as d3 from 'd3-force-3d';
@@ -105,7 +105,7 @@ class NodeGraph extends Component {
     componentDidMount() {
         //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
         this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
-        resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
+        GraphCanvas.resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
         //has updated the component with the proper width and height, and there's fallback values
@@ -145,97 +145,11 @@ class NodeGraph extends Component {
 
     }
 
-    initGui() {
-
-        const gui = new dat.GUI();
-        const scene = this.mainScene;
-        const graphGroup = this.graphGroup;
-        const lines = graphGroup.getObjectByProperty('name', 'lineGroup');
-        const textNodes = graphGroup.getObjectByProperty('name', 'textGroup');
-        const nodeSpheres = graphGroup.getObjectByProperty('name', 'nodeSphereGroup');
-        const sprites = graphGroup.getObjectByProperty('name', 'spriteGroup');
-
-        const param = {};
-
-        if(scene && scene.fog) {
-            param.sceneFogColor = scene.fog.color.getHex();
-            param.sceneFogNear = scene.fog.near;
-            param.sceneFogFar = scene.fog.far;
-            param.sceneFogVisible = scene.fog;
-        }
-
-        if(lines && lines.children.length) {
-            param.lineMaterial = lines.children[0].material;
-            param.lineColor = param.lineMaterial.color.getHex();
-            param.lineOpacity = param.lineMaterial.opacity;
-        }
-
-        console.log('nodeSpheres');
-        console.log(nodeSpheres);
-        console.log(nodeSpheres.children);
-
-
-        if(nodeSpheres && nodeSpheres.children.length) {
-            param.nodeSphereMaterial = nodeSpheres.children[0].material;
-            param.nodeOpacity = param.nodeSphereMaterial.opacity;
-        }
-
-        var sceneFolder = gui.addFolder('Scene');
-
-        if (param.sceneFogColor) {
-            sceneFolder.addColor(param, 'sceneFogColor').onChange(function(val){
-                scene.fog.color = new THREE.Color(val);
-            });
-        }
-
-        if (param.sceneFogNear) {
-            sceneFolder.add(param, 'sceneFogNear', 0, 10000, 1).onChange(function(val){
-                scene.fog.near = val;
-            });
-        }
-
-        if (param.sceneFogFar) {
-            sceneFolder.add(param, 'sceneFogFar', 0, 10000, 1).onChange(function(val){
-                scene.fog.far = val;
-            });
-        }
-
-        var linkFolder = gui.addFolder('Links');
-
-        if (param.lineMaterial && param.lineColor) {
-            linkFolder.addColor(param, 'lineColor').onChange(function(val){
-                for (let i = 0; i < lines.children.length; i++) {
-                    lines.children[i].material.color.setHex(val);
-                }
-                //console.log(lines.getObjectByProperty('type', 'LineBasicMaterial'));
-            });
-        }
-
-        if (param.lineOpacity) {
-            linkFolder.add( param, 'lineOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-                for (let i = 0; i < lines.children.length; i++) {
-                    lines.children[i].material.opacity = val;
-                }
-            } );
-        }
-
-        var nodeFolder = gui.addFolder('Nodes');
-
-        if (param.nodeOpacity) {
-            nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-                for (let i = 0; i < nodeSpheres.children.length; i++) {
-                    nodeSpheres.children[i].material.opacity = val;
-                }
-            } );
-        }
-
-    }
-
     componentDidUpdate(prevProps, prevState) {
         console.log('component did update');
 
         if (prevState !== this.state) {
-            resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
+            GraphCanvas.resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
         }
         this._frameId = null; // Pause simulation
 
@@ -301,7 +215,7 @@ class NodeGraph extends Component {
 
         layout[isD3Sim?'tick':'step'](); // Tick it
 
-        update3dStuff(mappedData, layout, isD3Sim, this.idField);
+        GraphCanvas.update3dStuff(mappedData, layout, this.idField);
     }
 
     /**ANIMATING STUFF STARTS HERE**/
@@ -360,8 +274,8 @@ class NodeGraph extends Component {
                 //add our 3d manifestation of nodes and links
                 const isD3Sim = this.forceEngine !== 'ngraph';
                 //lol
-                add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
-                this.initGui();
+                GraphCanvas.add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
+                GraphCanvas.initGui(this.mainScene);
             }
         }
 
@@ -404,7 +318,7 @@ class NodeGraph extends Component {
 
     mouseMove(e) {
         // update the mouse pos
-        const offset = getOffset(this.renderer.domElement),
+        const offset = GraphCanvas.getOffset(this.renderer.domElement),
             relPos = {
                 x: e.pageX - offset.left,
                 y: e.pageY - offset.top
