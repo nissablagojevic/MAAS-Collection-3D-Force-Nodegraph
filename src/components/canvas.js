@@ -22,7 +22,7 @@ export function getOffset(el) {
 }
 
 
-export function add3dStuff(data, graphGroup, layout, isD3Sim) {
+export function add3dStuff(data, graphGroup, layout, isD3Sim, callback) {
 
     //node and link 3d properties
 
@@ -63,7 +63,6 @@ export function add3dStuff(data, graphGroup, layout, isD3Sim) {
     graphGroup.add(nodeSphereGroup);
     graphGroup.add(textGroup);
     graphGroup.add(spriteGroup);
-
 }
 
 

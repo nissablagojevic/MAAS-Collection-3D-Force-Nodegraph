@@ -16,9 +16,9 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
     if(!skyBoxTexture) {
         // Textures
         const r = "http://localhost:3000/";
-        urls = [ r + "spacetex.jpg", r + "spacetex.jpg",
-            r + "spacetex.jpg", r + "spacetex.jpg",
-            r + "spacetex.jpg", r + "spacetex.jpg" ];
+        urls = [ r + "bluecloud.jpg", r + "bluecloud.jpg",
+            r + "bluecloud.jpg", r + "bluecloud.jpg",
+            r + "bluecloud.jpg", r + "bluecloud.jpg" ];
     }
 
     if(!viewFog) {
@@ -42,14 +42,13 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
         uniforms: cubeShader.uniforms,
         depthWrite: false,
         side: THREE.BackSide,
-        fog: true
     } );
     cubeMaterial.uniforms[ "tCube" ].value = textureCube;
     // Skybox
-    const cubeMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 10000, 10000, 10000 ), cubeMaterial );
+    const cubeMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 25000, 25000, 25000 ), cubeMaterial );
     cubeMesh.name = "skybox";
     scene
-        //.add( cubeMesh )
+        .add( cubeMesh )
         .add( ambientLight )
         .add( directLight );
 }

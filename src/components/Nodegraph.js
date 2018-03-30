@@ -165,9 +165,19 @@ class NodeGraph extends Component {
         }
 
         if(lines && lines.children.length) {
-            console.log(lines.children[0]);
             param.lineMaterial = lines.children[0].material;
             param.lineColor = param.lineMaterial.color.getHex();
+            param.lineOpacity = param.lineMaterial.opacity;
+        }
+
+        console.log('nodeSpheres');
+        console.log(nodeSpheres);
+        console.log(nodeSpheres.children);
+
+
+        if(nodeSpheres && nodeSpheres.children.length) {
+            param.nodeSphereMaterial = nodeSpheres.children[0].material;
+            param.nodeOpacity = param.nodeSphereMaterial.opacity;
         }
 
         var sceneFolder = gui.addFolder('Scene');
@@ -194,37 +204,30 @@ class NodeGraph extends Component {
 
         if (param.lineMaterial && param.lineColor) {
             linkFolder.addColor(param, 'lineColor').onChange(function(val){
+                for (let i = 0; i < lines.children.length; i++) {
+                    lines.children[i].material.color.setHex(val);
+                }
                 //console.log(lines.getObjectByProperty('type', 'LineBasicMaterial'));
             });
         }
 
-        /**
-        var param = {
-            lineOpacity: lineMat.opacity,
-            lineColor: lineMat.color.getHex(),
-            nodeColor: sphereMat.color.getHex(),
-            nodeOpacity: sphereMat.opacity
-        };
-
-        var lineFolder = gui.addFolder('Lines');
-
-        lineFolder.add( param, 'lineOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-            lineMat.opacity = val;
-        } );
-
-        lineFolder.addColor(param, 'lineColor').onChange(function(val){
-            lineMat.color.setHex( val );
-        });
-
+        if (param.lineOpacity) {
+            linkFolder.add( param, 'lineOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
+                for (let i = 0; i < lines.children.length; i++) {
+                    lines.children[i].material.opacity = val;
+                }
+            } );
+        }
 
         var nodeFolder = gui.addFolder('Nodes');
 
-        nodeFolder.addColor(param, 'nodeColor').onChange(function(val){
-            sphereMat.color.setHex( val );
-        });
-        nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-            sphereMat.opacity = val;
-        } );**/
+        if (param.nodeOpacity) {
+            nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
+                for (let i = 0; i < nodeSpheres.children.length; i++) {
+                    nodeSpheres.children[i].material.opacity = val;
+                }
+            } );
+        }
 
     }
 
