@@ -5,10 +5,7 @@ import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
 import './Nodegraph.css';
 
 //3d stuff
-import * as THREE from 'three';
-import {CAMERA_DISTANCE2NODES_FACTOR, MAX_FRAMES, GraphCanvas} from './canvas.js';
-import { addEnv } from '../3d';
-
+import {GraphCanvas} from './canvas.js';
 
 //force graphing
 import * as d3 from 'd3-force-3d';
@@ -16,14 +13,7 @@ import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 
-//leap controls
-import {initLeapControls, swipe} from "../leap";
-
-//3d continued... controls.
-//have to import controls as non-ES6 because of scoping issues.
-//see https://stackoverflow.com/questions/28068038/how-do-i-import-additional-plugins-for-an-already-imported-library-using-jspm
-const OrbitControls = require('three-orbit-controls')(THREE);
-
+import {GraphLayout} from '../d3';
 
 class NodeGraph extends Component {
     constructor() {
@@ -37,38 +27,8 @@ class NodeGraph extends Component {
             mappedData: null
         };
 
-
-        //3D STUFF with THREE.JS
-        //we need something to render with and something to see the render with
-        this.renderer = new THREE.WebGLRenderer({
-          antialias: true,
-        });
-        this.camera = new THREE.PerspectiveCamera();
-        this.camera.position.z = 2000;
-        this.camera.far = 20000;
-        this.controls = null;
-
-        //animation frame counter and the somewhat magical _frameId
-        this.counter = 0;
-        this._frameId = null;
-
-        //the mainscene is there to hold our 3d graph but also lights and viewfog or other globally stuff
-        this.mainScene = new THREE.Scene();
-
-
-        // Capture mouse coords on move
-        this.raycaster = new THREE.Raycaster();
-        this.mousePos = new THREE.Vector2();
-        this.mousePos.x = -2; // Initialize off canvas
-        this.mousePos.y = -2;
-
-        //the graphGroup is there for all of our nodes and links, our main actors.
-        this.graphGroup = new THREE.Group();
-        this.graphGroup.name = "graphGroup";
-
-        this.mainScene.add(this.graphGroup);
-
-        addEnv(this.mainScene);
+        this.graphCanvas = GraphCanvas.getInstance();
+        this.graphLayout = GraphLayout.getInstance();
 
         //d3 force stuff
         this.d3ForceLayout = d3.forceSimulation()
@@ -91,41 +51,20 @@ class NodeGraph extends Component {
 
         this.ngraph = { graph, forcelayout, forcelayout3d };
 
-        //interaction stuff
-        this.selectedNode = null;
-
         this.animate = this.animate.bind(this);
-        this.mouseMove = this.mouseMove.bind(this);
-        this.handleClick = this.handleClick.bind(this);
-        this.renderer.domElement.addEventListener("mousemove", this.mouseMove);
-        this.renderer.domElement.addEventListener("click", this.handleClick);
 
     }
 
     componentDidMount() {
         //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
         this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
-        GraphCanvas.resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
+        this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
         //has updated the component with the proper width and height, and there's fallback values
-        this.mount.appendChild(this.renderer.domElement);
+        this.mount.appendChild(this.graphCanvas.getRenderer().domElement);
 
-        //add leap controller swipe catcher
-
-
-        // Add camera interaction and mousebased input
-        this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-        this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-        this.controls.dampingFactor = 0.25;
-        //this.controls.panningMode = THREE.HorizontalPanning; // default is THREE.ScreenSpacePanning
-        this.controls.minDistance = 1;
-        this.controls.maxDistance = 10000;
-        this.controls.maxPolarAngle = Math.PI;
-
-        initLeapControls();
-        var swiper = window.controller.gesture('swipe');
-        swiper.update((g) => swipe(g));
+        this.graphCanvas.initThreeControls();
 
         //fetch data from API after initialisation
         qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
@@ -139,9 +78,6 @@ class NodeGraph extends Component {
 
         //start requestAnimationFrame checker;
         this.startLoop();
-        //or just initial frame for testing purposes
-        //renderer.render(mainScene, camera);
-
 
     }
 
@@ -149,9 +85,10 @@ class NodeGraph extends Component {
         console.log('component did update');
 
         if (prevState !== this.state) {
-            GraphCanvas.resizeCanvas(this.renderer, this.camera, this.state.width, this.state.height);
+            this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
         }
-        this._frameId = null; // Pause simulation
+
+        this.graphCanvas.setFrameId(null); // Pause simulation
 
         //once we add react state to allow parameters to change, we'll need to check if we need to request new data
         //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
@@ -167,39 +104,7 @@ class NodeGraph extends Component {
             });
         }
 
-        // Feed data to force-directed layout
-        if (this.isD3Sim && this.state.mappedData !== null) {
-            // D3-force
-            (this.layout = this.d3ForceLayout)
-                .stop()
-                .alpha(1)// re-heat the simulation
-                .numDimensions(this.numDimensions)
-                .nodes(this.state.mappedData.nodes)
-                .force('link')
-                .id(d => d[this.idField])
-                .links(this.state.mappedData.links);
-        } else {
-            // ngraph
-            const graph = this.ngraph.graph();
-
-            if(this.state.mappedData !== null) {
-                this.state.mappedData.nodes.forEach(node => { graph.addNode(node[this.idField]); });
-                this.state.mappedData.links.forEach(link => { graph.addLink(link.source, link.target); });
-                this.layout = this.ngraph['forcelayout' + (this.numDimensions === 2 ? '' : '3d')](graph);
-                this.layout.graph = graph; // Attach graph reference to layout
-            }
-
-        }
-
-
-        if(this.layout && this.layout.graph) {
-            for (let i=0; i<this.warmupTicks; i++) { 
-                this.layout[this.isD3Sim?'tick':'step'](); 
-            } // Initial ticks before starting to render
-
-            this._frameId = this.layoutTick;
-        }
-
+        this.graphLayout.createForceLayout(this.state.mappedData);
 
     }
 
@@ -210,12 +115,12 @@ class NodeGraph extends Component {
 
         //console.log('layoutTick');
         if (this.cntTicks++ > this.cooldownTicks || (new Date()) - this.startTickTime > this.cooldownTime) {
-            this._frameId = null; // Stop ticking graph
+            this.graphCanvas.setFrameId(null); // Stop ticking graph
         }
 
         layout[isD3Sim?'tick':'step'](); // Tick it
 
-        GraphCanvas.update3dStuff(mappedData, layout, this.idField);
+        this.graphCanvas.update3dStuff(mappedData, layout, this.idField);
     }
 
     /**ANIMATING STUFF STARTS HERE**/
@@ -226,18 +131,18 @@ class NodeGraph extends Component {
 
     startLoop() {
         console.log('startLoop');
-        if( !this._frameId) {
+        if( !this.graphCanvas.getFrameId()) {
             this.setState({animating: true});
-            this._frameId = window.requestAnimationFrame( this.animate );
+            this.graphCanvas.setFrameId(window.requestAnimationFrame( this.animate ));
         }
     }
 
     stopLoop() {
         console.log('stoploop');
         console.log(this);
-        window.cancelAnimationFrame( this._frameId );
-        //setting _frameId to null should pause THREE.js rendering
-        this._frameId = null;
+        window.cancelAnimationFrame( this.graphCanvas.getFrameId() );
+        //setting _frameId to null will pause THREE.js rendering
+        this.graphCanvas.setFrameId(null);
         //also let react know we're pausing
         this.setState({animating: false});
 
@@ -247,8 +152,8 @@ class NodeGraph extends Component {
 
 
     animate(prevProps, prevState) {
-        if(this._frameId) {
-            this._frameId();
+        if(this.graphCanvas.getFrameId()) {
+            this.graphCanvas.getFrameId()();
         }
 
         //note, stopping the animation loop prevents mouse controls from firing too
@@ -272,39 +177,12 @@ class NodeGraph extends Component {
             //only map data if the state has changed
             if(prevState !== this.state) {
                 //add our 3d manifestation of nodes and links
-                const isD3Sim = this.forceEngine !== 'ngraph';
-                //lol
-                GraphCanvas.add3dStuff(this.state.mappedData, this.graphGroup, this.layout, isD3Sim);
-                GraphCanvas.initGui(this.mainScene);
+                this.graphCanvas.add3dStuff(this.state.mappedData, this.layout);
+                this.graphCanvas.initGui();
             }
         }
 
-
-        if (this.camera.position.x === 0 && this.camera.position.y === 0) {
-            // If camera still in default position (not user modified)
-            this.camera.lookAt(this.graphGroup.position);
-
-            //we're assuming that we're working in narratives here, and only on one.
-            if(this.state.responseData !== null && this.state.responseData.hasOwnProperty('narratives')) {
-                this.camera.position.z = Math.cbrt(this.state.responseData.narratives[0].objects.length) * CAMERA_DISTANCE2NODES_FACTOR;
-            }
-        }
-
-        const textGroup = this.graphGroup.getObjectByProperty('name', 'textGroup');
-
-        if(textGroup && textGroup.children) {
-            for (let i = 0; i < textGroup.children.length; i++) {
-                textGroup.children[i].lookAt(this.camera.position);
-            }
-        }
-
-        this.raycaster.setFromCamera(this.mousePos, this.camera);
-        //this.tbControls.update();
-        this.controls.update();
-
-        //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
-        //the renderer needs to shove the frame to the screen
-        this.renderer.render(this.mainScene, this.camera);
+        this.graphCanvas.animate3d();
 
         if(this.state.animating) {
             //and the window needs to request a new frame to do this all again
@@ -312,59 +190,6 @@ class NodeGraph extends Component {
         }
     }
     /**ANIMATING STUFF ENDS HERE**/
-
-
-    /**INTERACTION STUFF STARTS HERE**/
-
-    mouseMove(e) {
-        // update the mouse pos
-        const offset = GraphCanvas.getOffset(this.renderer.domElement),
-            relPos = {
-                x: e.pageX - offset.left,
-                y: e.pageY - offset.top
-            };
-        this.mousePos.x = (relPos.x / this.state.width) * 2 - 1;
-        this.mousePos.y = -(relPos.y / this.state.height) * 2 + 1;
-
-        this.raycaster.setFromCamera(this.mousePos, this.camera);
-        //check if our raycasted click event collides with a nodesphere
-        if(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup')) {
-            const intersects = this.raycaster.intersectObjects(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup').children)
-                .filter(o => o.object.__data); // Check only objects with data (nodes)
-            //if our mouseover collides with a node
-            if (intersects.length) {
-                this.tooltip.style.padding = 10 + 'px';
-                this.tooltip.style.backgroundColor = 'black';
-                this.tooltip.innerHTML = intersects[0].object.__data.id + ": " + intersects[0].object.__data.name;
-            } else {
-                this.tooltip.style.backgroundColor = 'transparent';
-                this.tooltip.innerHTML = '';
-            }
-
-            // Move tooltip
-            this.tooltip.style.top = (relPos.y - 20) + 'px';
-            this.tooltip.style.left = (relPos.x - 20) + 'px';
-        }
-
-
-    }
-
-    handleClick() {
-            //update our raycaster's position with the mouse position coordinates and camera info
-            this.raycaster.setFromCamera(this.mousePos, this.camera);
-            //check if our raycasted click event collides with a nodesphere
-            const intersects = this.raycaster.intersectObjects(this.graphGroup.getObjectByProperty('name', 'nodeSphereGroup').children)
-                .filter(o => o.object.__data); // Check only objects with data (nodes)
-
-            //if our click collided with a node
-            if (intersects.length) {
-                //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-                this.selectedNode = intersects[0].object.__data.name;
-                console.log(this.selectedNode);
-            }
-    }
-
-    /**INTERACTION STUFF ENDS HERE**/
 
 
     render() {
