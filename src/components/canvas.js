@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import dat from 'dat.gui';
 import { addLine, addSprite, addSphere, addText, addEnv } from '../3d';
+import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
 
 //leap controls
 import {initLeapControls, swipe} from "../leap";
@@ -111,6 +112,10 @@ export const GraphCanvas = (function() {
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
 
+    let fetchingJson = false;
+    const sourceUrl = true;
+    let animating = false;
+
     // Add camera interaction and mousebased input
     const controls = new OrbitControls( camera, renderer.domElement );
 
@@ -124,11 +129,14 @@ export const GraphCanvas = (function() {
         mainScene.add(graphGroup);
         mousePos.x = -2; // Initialize off canvas
         mousePos.y = -2;
+        let mappedData = null;
 
         return {
-            add3dStuff: function(data, layout) {
+            add3dStuff: function() {
+                console.log('add 3d stuff');
+                this.initThreeControls();
                 //map the newly created nodes to spheres
-                data.nodes.forEach(node => {
+                mappedData.nodes.forEach(node => {
 
                     imageLoader
                         //.load( node.imageUrl + performance.now(), function ( image ) {
@@ -144,7 +152,7 @@ export const GraphCanvas = (function() {
                 });
 
                 //map the newly created links to lines in THREE.js and add them to the scene
-                data.links.forEach(link => {
+                mappedData.links.forEach(link => {
                     addLine(link, lineGroup);
                 });
 
@@ -152,6 +160,8 @@ export const GraphCanvas = (function() {
                 graphGroup.add(nodeSphereGroup);
                 graphGroup.add(textGroup);
                 graphGroup.add(spriteGroup);
+
+                this.initGui();
             },
             animate3d: function() {
                 if (camera.position.x === 0 && camera.position.y === 0) {
@@ -174,6 +184,44 @@ export const GraphCanvas = (function() {
                 //the renderer needs to shove the frame to the screen
                 renderer.render(mainScene, camera);
             },
+            animate: function() {
+                console.log('animate');
+                console.log(instance);
+                //hello
+                if(_frameId && typeof _frameId === 'object') {
+                    console.log('execute frameId()');
+                    _frameId();
+                }
+
+                animating = true;
+                
+                console.log('here');
+                console.log(mappedData);
+                console.log(!fetchingJson);
+                console.log(sourceUrl);
+
+                //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
+                //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
+                if(!fetchingJson && sourceUrl && mappedData !== null) {
+                    //this really only should ever execute once per query, ensure it.
+                    fetchingJson = true;
+
+                    console.log("ALL TRUE");
+                    console.log(fetchingJson);
+                    console.log(graphGroup.children);
+                    //only map data if the state has changed?
+                    if(graphGroup.children.length === 0) {
+                        //add our 3d manifestation of nodes and links
+                        instance.add3dStuff();
+                    }
+                } else {
+                    console.log("missing: fetchingjson || graphql sourceurl || mapped data");
+                }
+                instance.animate3d();
+
+                //and the window needs to request a new frame to do this all again
+                window.requestAnimationFrame( instance.animate );
+            },
             getRenderer:  function() {
               return renderer;
             },
@@ -188,6 +236,23 @@ export const GraphCanvas = (function() {
                 controls.maxDistance = 10000;
                 controls.maxPolarAngle = Math.PI;
             },
+            startLoop: function() {
+                console.log('startLoop');
+                console.log(!_frameId);
+                if( !_frameId) {
+                    _frameId = window.requestAnimationFrame( this.animate );
+                }
+            },
+            stopLoop: function() {
+                console.log('stoploop');
+                console.log(this);
+                window.cancelAnimationFrame( _frameId );
+                //setting _frameId to null will pause THREE.js rendering
+                _frameId = null;
+
+                // Note: no need to worry if the loop has already been cancelled
+                // cancelAnimationFrame() won't throw an error
+            },
             updateControls: function() {
                 if(swiper) {
                     swiper.update((g) => swipe(g));
@@ -196,7 +261,8 @@ export const GraphCanvas = (function() {
                     controls.update();
                 }
             },
-            update3dStuff: function(mappedData, layout, nodeIdField) {
+            update3dStuff: function(mappedGraphedData, layout, nodeIdField) {
+                mappedData = mappedGraphedData;
 
                 // Update nodes position
                 mappedData.nodes.forEach(node => {
@@ -340,7 +406,21 @@ export const GraphCanvas = (function() {
               return _frameId;
             },
             setFrameId: function(frameId) {
+                console.log('setFrameId');
+                console.log(frameId);
                 _frameId = frameId;
+            },
+            getMappedData: function() {
+                return mappedData;
+            },
+            setMappedData: function(data) {
+                mappedData = data;
+            },
+            getFetchingJson: function() {
+                return fetchingJson;
+            },
+            setFetchingJson: function(fJ) {
+                   fetchingJson = fJ;
             }
         }
     }

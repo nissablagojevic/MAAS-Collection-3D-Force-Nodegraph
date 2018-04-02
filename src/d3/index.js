@@ -18,6 +18,8 @@ export const GraphLayout = (function() {
         .force('charge', d3.forceManyBody())
         .force('center', d3.forceCenter())
         .stop();
+
+    //forceEngine can be d3 or ngraph
     const forceEngine = 'ngraph';
     const isD3Sim = forceEngine !== 'ngraph';
 
@@ -37,26 +39,28 @@ export const GraphLayout = (function() {
 
     function init() {
         return {
-            createForceLayout: function(resolvedData){
-                data = resolvedData;
+            createForceLayout: function(mappedData){
+                data = mappedData;
+                console.log('createForceLayout');
+                console.log(data);
                 // Feed data to force-directed layout
-                if (isD3Sim && resolvedData !== null) {
+                if (isD3Sim && data !== null) {
                     // D3-force
                     (layout = d3ForceLayout)
                         .stop()
                         .alpha(1)// re-heat the simulation
                         .numDimensions(this.numDimensions)
-                        .nodes(resolvedData.nodes)
+                        .nodes(data.nodes)
                         .force('link')
                         .id(d => d[idField])
-                        .links(resolvedData.links);
+                        .links(data.links);
                 } else {
                     // ngraph
                     const graph = ngraph.graph();
 
-                    if(resolvedData !== null) {
-                        resolvedData.nodes.forEach(node => { graph.addNode(node[idField]); });
-                        resolvedData.links.forEach(link => { graph.addLink(link.source, link.target); });
+                    if(data !== null) {
+                        data.nodes.forEach(node => { graph.addNode(node[idField]); });
+                        data.links.forEach(link => { graph.addLink(link.source, link.target); });
                         layout = ngraph['forcelayout' + (numDimensions === 2 ? '' : '3d')](graph);
                         layout.graph = graph; // Attach graph reference to layout
                     }
@@ -67,14 +71,17 @@ export const GraphLayout = (function() {
                     for (let i=0; i<warmupTicks; i++) {
                         layout[isD3Sim?'tick':'step']();
                     } // Initial ticks before starting to render
+                    if(data && data.hasOwnProperty('nodes') && data.nodes.length > 0) {
+                        console.log('about to set layoutTick from d3');
+                        graphCanvas.setFrameId(this.layoutTick);
+                    }
 
-                    graphCanvas.setFrameId(this.layoutTick);
                 }
 
 
             },
             layoutTick: function() {
-                //console.log('layoutTick');
+                console.log('layoutTick');
                 if (cntTicks++ > cooldownTicks || (new Date()) - startTickTime > cooldownTime) {
                     graphCanvas.setFrameId(null); // Stop ticking graph
                 }
