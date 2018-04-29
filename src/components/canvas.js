@@ -180,7 +180,6 @@ export const GraphCanvas = (function() {
                 renderer.render(mainScene, camera);
             },
             animate: function() {
-                console.log('animate');
                 if(_frameId && typeof _frameId === 'object') {
                     _frameId();
                 }
@@ -204,7 +203,7 @@ export const GraphCanvas = (function() {
 
                 } else {
                     instance.animate3d();
-                    instance.update3dStuff('id');
+                    instance.update3dStuff();
 
                     if(layout && layout.graph) {
                         const layoutTick = layout[isD3Sim?'tick':'step']();
@@ -249,7 +248,7 @@ export const GraphCanvas = (function() {
                     controls.update();
                 }
             },
-            update3dStuff: function(nodeIdField) {
+            update3dStuff: function() {
                 // Update nodes position
                 mappedData.nodes.forEach(node => {
                     graphLayout.updateNodePos(node);
