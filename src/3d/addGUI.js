@@ -13,7 +13,6 @@ export default function addGUI(mainScene, lineGroup, nodeSphereGroup) {
     }
 
     if(lineGroup && lineGroup.children.length) {
-        console.log('have lineGroup');
         param.lineMaterial = lineGroup.children[0].material;
         param.lineColor = param.lineMaterial.color.getHex();
         param.lineOpacity = param.lineMaterial.opacity;

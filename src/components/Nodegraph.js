@@ -14,10 +14,13 @@ class NodeGraph extends Component {
             width: '100%',
             height: '100vh',
             fetchingJson: false,
-            responseData: null
+            responseData: null,
+            selectedNode: null
         };
 
         this.graphCanvas = GraphCanvas.getInstance();
+        this.handleClick = this.handleClick.bind(this);
+        this.renderInfo = this.renderInfo.bind(this);
     }
 
     componentDidMount() {
@@ -41,15 +44,18 @@ class NodeGraph extends Component {
         });
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
         if(this.state.responseData) {
-            const mappedData = mapData(this.state.responseData);
-            this.graphCanvas.setMappedData(mappedData);
-            if(this.graphCanvas.getMappedData()) {
-                this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
-                if(this.graphCanvas.isFetchingJson()) {
-                    this.graphCanvas.setFetchingJson(false);
-                    this.graphCanvas.startLoop();
+            //super shallow check for object sameness
+            if(JSON.stringify(this.state.responseData) !== JSON.stringify(prevState.responseData) ) {
+                const mappedData = mapData(this.state.responseData);
+                this.graphCanvas.setMappedData(mappedData);
+                if(this.graphCanvas.getMappedData()) {
+                    this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
+                    if(this.graphCanvas.isFetchingJson()) {
+                        this.graphCanvas.setFetchingJson(false);
+                        this.graphCanvas.startLoop();
+                    }
                 }
             }
         } else {
@@ -77,10 +83,44 @@ class NodeGraph extends Component {
         this.graphCanvas.stopLoop();
     }
 
+    handleClick(e) {
+        this.setState({selectedNode: this.graphCanvas.selectNode()});
+    }
+
+    renderInfo() {
+        let info = '';
+        if(this.state.selectedNode) {
+            console.log(this.state.selectedNode);
+
+            const {id, name, type, mainImage, description, date, images} = this.state.selectedNode;
+
+            info = <div>
+                <dt>Name: </dt>
+                <dd>{name}</dd>
+                <dt>Date: </dt>
+                <dd>{date}</dd>
+                <dt>Description: </dt>
+                <dd>{description}</dd>
+                <dt>Thumbnail: </dt>
+                <dd><img src={mainImage}/></dd>
+            </div>;
+        }
+
+        return (<div className="info">{info}</div>);
+    }
+
     render() {
         return (
-            <div id="nodegraph" ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}>
-                <div ref={tooltip => this.tooltip = tooltip} className="graph-tooltip" />
+            <div
+                id="nodegraph"
+                ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
+                onClick={() => this.handleClick()}>
+                <div className="instructions">
+                    Camera controls:
+                    Tap &amp; Drag to orbit. Pinch to zoom.
+                    Tap on a sphere to select that object.
+                </div>
+            {this.renderInfo(this.state.selectedNode)}
             </div>
         );
     }

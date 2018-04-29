@@ -1,5 +1,5 @@
-import mapNode from '../schemas/node.js';
-import mapLink from '../schemas/link.js';
+import mapNode from '../schema/node.js';
+import mapLink from '../schema/link.js';
 
 //graphql data
 export const sourceUrl = 'https://api.maas.museum/graphql?query=';
@@ -34,7 +34,7 @@ export const sourceQuery = `{narratives(filter:{_id:2087}){
 }`;
 
 /*
- * Description: resolve graphQl data against 3d-force-graph schemas
+ * Description: resolve graphQl data against 3d-force-graph schema
  *
  * @param {object} response.data from graphQl endpoint
  */

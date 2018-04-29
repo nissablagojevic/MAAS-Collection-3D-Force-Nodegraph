@@ -83,7 +83,6 @@ class App extends Component {
                 <Router>
                     <div>
                         <Navigation development={this.setEnv()}/>
-
                         {this.renderRoutes(this.setEnv())}
                     </div>
                 </Router>

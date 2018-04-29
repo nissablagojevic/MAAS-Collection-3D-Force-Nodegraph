@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { addLine, addSphere, addText, addEnv, addGUI } from '../3d';
-import { GraphLayout } from '../d3';
+import { GraphLayout } from '../forceLayout';
 
 //leap controls
 import {initLeapControls, swipe} from "../leap";
@@ -17,7 +17,7 @@ export const GraphCanvas = (function() {
     let _frameId = null;
     let layout = null;
 
-    //renderer.domElement.addEventListener("mousemove", mouseMove);
+    renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
 
     //interaction stuff
@@ -66,8 +66,7 @@ export const GraphCanvas = (function() {
         //if our click collided with a node
         if (intersects.length) {
             //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-            this.selectedNode = intersects[0].object.__data.name;
-            console.log(this.selectedNode);
+            selectedNode = intersects[0].object.__data;
         }
     }
 
@@ -136,8 +135,8 @@ export const GraphCanvas = (function() {
                     // would probably greatly help memory usage
                     // the adding of stuff to the scene is our main memory bottleneck
                     imageLoader
-                        //.load( node.imageUrl + performance.now(), function ( image ) {
-                        .load( node.imageUrl, function ( image ) {
+                        //.load( node.mainImage + performance.now(), function ( image ) {
+                        .load( node.mainImage, function ( image ) {
                             addSphere(node, image, nodeSphereGroup, true);
                         },
                         undefined,
@@ -280,6 +279,9 @@ export const GraphCanvas = (function() {
             },
             setFetchingJson: function(fJ) {
                 fetchingJson = fJ;
+            },
+            selectNode: function() {
+                return selectedNode;
             }
         }
     }
