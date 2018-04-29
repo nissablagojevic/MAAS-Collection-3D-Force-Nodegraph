@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import dat from 'dat.gui';
 import { addLine, addSprite, addSphere, addText, addEnv } from '../3d';
 import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
+import { GraphLayout } from '../d3';
 
 //leap controls
 import {initLeapControls, swipe} from "../leap";
@@ -14,6 +15,8 @@ export const GraphCanvas = (function() {
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
     });
+
+    const graphLayout = GraphLayout.getInstance();
 
     renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
@@ -85,6 +88,7 @@ export const GraphCanvas = (function() {
     addEnv(mainScene);
 
     let _frameId = null;
+    let layout = null;
 
     // Capture mouse coords on move
     const raycaster = new THREE.Raycaster();
@@ -108,6 +112,14 @@ export const GraphCanvas = (function() {
     //forceEngine can be d3 or ngraph
     const forceEngine = 'ngraph';
     const isD3Sim = forceEngine !== 'ngraph';
+
+    const idField = 'id';
+    const warmupTicks = 1;
+    const cooldownTicks = Infinity;
+    //time in ms
+    const cooldownTime = 15000;
+    let cntTicks = 0;
+    const startTickTime = new Date();
 
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
@@ -133,7 +145,6 @@ export const GraphCanvas = (function() {
 
         return {
             add3dStuff: function() {
-                console.log('add 3d stuff');
                 this.initThreeControls();
                 //map the newly created nodes to spheres
                 mappedData.nodes.forEach(node => {
@@ -185,39 +196,54 @@ export const GraphCanvas = (function() {
                 renderer.render(mainScene, camera);
             },
             animate: function() {
-                console.log('animate');
-                console.log(instance);
                 //hello
                 if(_frameId && typeof _frameId === 'object') {
-                    console.log('execute frameId()');
                     _frameId();
                 }
 
                 animating = true;
-                
-                console.log('here');
-                console.log(mappedData);
-                console.log(!fetchingJson);
-                console.log(sourceUrl);
 
-                //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
-                //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
-                if(!fetchingJson && sourceUrl && mappedData !== null) {
-                    //this really only should ever execute once per query, ensure it.
-                    fetchingJson = true;
+                //if we haven't already put in our 3d objects
+                if(graphGroup.children.length === 0) {
+                    //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
+                    //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
+                    if (!fetchingJson && sourceUrl && mappedData !== null) {
+                        //this really only should ever execute once per query, ensure it.
+                        fetchingJson = true;
 
-                    console.log("ALL TRUE");
-                    console.log(fetchingJson);
-                    console.log(graphGroup.children);
-                    //only map data if the state has changed?
-                    if(graphGroup.children.length === 0) {
-                        //add our 3d manifestation of nodes and links
-                        instance.add3dStuff();
+                        //only map data if the state has changed?
+                        if (graphGroup.children.length === 0) {
+                            //add our 3d manifestation of nodes and links
+                            instance.add3dStuff();
+                            layout = graphLayout.createForceLayout(mappedData);
+
+                        }
+                    } else {
+                        console.log("missing: fetchingjson || graphql sourceurl || mapped data");
                     }
+
                 } else {
-                    console.log("missing: fetchingjson || graphql sourceurl || mapped data");
+                    instance.animate3d();
+                    instance.update3dStuff(mappedData, layout, 'id');
+
+                    if(layout && layout.graph) {
+                        for (let i=0; i<warmupTicks; i++) {
+                            layout[isD3Sim?'tick':'step']();
+                        } // Initial ticks before starting to render
+                        if(mappedData && mappedData.hasOwnProperty('nodes') && mappedData.nodes.length > 0) {
+
+                            let layoutTick = function() {
+                                if (cntTicks++ > cooldownTicks || (new Date()) - startTickTime > cooldownTime) {
+                                    instance.setFrameId(null); // Stop ticking graph
+                                }
+                                layout[isD3Sim?'tick':'step'](); // Tick it
+                            };
+
+                            instance.setFrameId(layoutTick);
+                        }
+
+                    }
                 }
-                instance.animate3d();
 
                 //and the window needs to request a new frame to do this all again
                 window.requestAnimationFrame( instance.animate );
@@ -238,14 +264,12 @@ export const GraphCanvas = (function() {
             },
             startLoop: function() {
                 console.log('startLoop');
-                console.log(!_frameId);
                 if( !_frameId) {
                     _frameId = window.requestAnimationFrame( this.animate );
                 }
             },
             stopLoop: function() {
                 console.log('stoploop');
-                console.log(this);
                 window.cancelAnimationFrame( _frameId );
                 //setting _frameId to null will pause THREE.js rendering
                 _frameId = null;
@@ -287,7 +311,6 @@ export const GraphCanvas = (function() {
                     }
 
                     if(displayText) {
-                        //console.log(displayText);
                         const centerOffset = -0.5 * ( displayText.geometry.boundingBox.max.x - displayText.geometry.boundingBox.min.x );
                         //displayText.position.x = centerOffset + pos.x;
                         displayText.position.x = pos.x;
@@ -355,13 +378,13 @@ export const GraphCanvas = (function() {
                 }
 
                 if (param.sceneFogNear) {
-                    sceneFolder.add(param, 'sceneFogNear', 0, 10000, 1).onChange(function(val){
+                    sceneFolder.add(param, 'sceneFogNear', 0, 10000, 0).onChange(function(val){
                         mainScene.fog.near = val;
                     });
                 }
 
                 if (param.sceneFogFar) {
-                    sceneFolder.add(param, 'sceneFogFar', 0, 10000, 1).onChange(function(val){
+                    sceneFolder.add(param, 'sceneFogFar', 0, 10000, 10000).onChange(function(val){
                         mainScene.fog.far = val;
                     });
                 }
@@ -406,9 +429,10 @@ export const GraphCanvas = (function() {
               return _frameId;
             },
             setFrameId: function(frameId) {
-                console.log('setFrameId');
-                console.log(frameId);
                 _frameId = frameId;
+            },
+            setLayout: function(l) {
+                layout = l;
             },
             getMappedData: function() {
                 return mappedData;

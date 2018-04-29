@@ -60,10 +60,10 @@ class NodeGraph extends Component {
             const mappedData = mapData(this.state.responseData);
             this.graphCanvas.setMappedData(mappedData);
             if(this.graphCanvas.getMappedData()) {
-                this.graphLayout.createForceLayout(mappedData);
                 this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
                 this.graphCanvas.setFrameId(null); // Pause simulation
                 if(this.graphCanvas.getFetchingJson()) {
+                    this.graphCanvas.setFetchingJson(false);
                     this.graphCanvas.startLoop();
                 }
             }

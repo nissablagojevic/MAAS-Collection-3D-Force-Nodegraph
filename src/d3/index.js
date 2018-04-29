@@ -9,9 +9,6 @@ import {GraphCanvas} from '../components/canvas.js';
 
 export const GraphLayout = (function() {
     let instance;
-
-    const graphCanvas = GraphCanvas.getInstance();
-
     //d3 force stuff
     const d3ForceLayout = d3.forceSimulation()
         .force('link', d3.forceLink())
@@ -67,29 +64,8 @@ export const GraphLayout = (function() {
 
                 }
 
-                if(layout && layout.graph) {
-                    for (let i=0; i<warmupTicks; i++) {
-                        layout[isD3Sim?'tick':'step']();
-                    } // Initial ticks before starting to render
-                    if(data && data.hasOwnProperty('nodes') && data.nodes.length > 0) {
-                        console.log('about to set layoutTick from d3');
-                        graphCanvas.setFrameId(this.layoutTick);
-                    }
-
-                }
-
-
-            },
-            layoutTick: function() {
-                console.log('layoutTick');
-                if (cntTicks++ > cooldownTicks || (new Date()) - startTickTime > cooldownTime) {
-                    graphCanvas.setFrameId(null); // Stop ticking graph
-                }
-
-                layout[isD3Sim?'tick':'step'](); // Tick it
-
-                graphCanvas.update3dStuff(data, layout, idField);
-            },
+                return layout;
+            }
         }
     }
     return{
