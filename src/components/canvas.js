@@ -1,30 +1,30 @@
 import * as THREE from 'three';
-import dat from 'dat.gui';
-import { addLine, addSprite, addSphere, addText, addEnv } from '../3d';
-import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
+import { addLine, addSphere, addText, addEnv, addGUI } from '../3d';
 import { GraphLayout } from '../d3';
 
 //leap controls
 import {initLeapControls, swipe} from "../leap";
 
-export const MAX_FRAMES = 1000;
-
 export const GraphCanvas = (function() {
     let instance;
-    const CAMERA_DISTANCE2NODES_FACTOR = 150;
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
     });
 
+    //d3 graph calculation stuff
     const graphLayout = GraphLayout.getInstance();
+    const isD3Sim = graphLayout.isD3Sim();
+    let _frameId = null;
+    let layout = null;
 
-    renderer.domElement.addEventListener("mousemove", mouseMove);
+    //renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
 
     //interaction stuff
     let selectedNode = null;
 
     function mouseMove(e) {
+        //console.log('mouseMove');
         // update the mouse pos
         const offset = getOffset(renderer.domElement),
             relPos = {
@@ -66,8 +66,8 @@ export const GraphCanvas = (function() {
         //if our click collided with a node
         if (intersects.length) {
             //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-            //this.selectedNode = intersects[0].object.__data.name;
-            //console.log(this.selectedNode);
+            this.selectedNode = intersects[0].object.__data.name;
+            console.log(this.selectedNode);
         }
     }
 
@@ -86,9 +86,6 @@ export const GraphCanvas = (function() {
     const mainScene = new THREE.Scene();
 
     addEnv(mainScene);
-
-    let _frameId = null;
-    let layout = null;
 
     // Capture mouse coords on move
     const raycaster = new THREE.Raycaster();
@@ -109,24 +106,10 @@ export const GraphCanvas = (function() {
 
     const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
 
-    //forceEngine can be d3 or ngraph
-    const forceEngine = 'ngraph';
-    const isD3Sim = forceEngine !== 'ngraph';
-
-    const idField = 'id';
-    const warmupTicks = 1;
-    const cooldownTicks = Infinity;
-    //time in ms
-    const cooldownTime = 15000;
-    let cntTicks = 0;
-    const startTickTime = new Date();
-
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
 
     let fetchingJson = false;
-    const sourceUrl = true;
-    let animating = false;
 
     // Add camera interaction and mousebased input
     const controls = new OrbitControls( camera, renderer.domElement );
@@ -149,10 +132,12 @@ export const GraphCanvas = (function() {
                 //map the newly created nodes to spheres
                 mappedData.nodes.forEach(node => {
 
+                    //this needs to be done asynchronously with a loading image fallback
+                    // would probably greatly help memory usage
+                    // the adding of stuff to the scene is our main memory bottleneck
                     imageLoader
                         //.load( node.imageUrl + performance.now(), function ( image ) {
                         .load( node.imageUrl, function ( image ) {
-                            //addSprite(node, image, spriteGroup, false);
                             addSphere(node, image, nodeSphereGroup, true);
                         },
                         undefined,
@@ -160,6 +145,7 @@ export const GraphCanvas = (function() {
                             //Image loading error nodes.
                             addText(node, textGroup);
                         });
+
                 });
 
                 //map the newly created links to lines in THREE.js and add them to the scene
@@ -172,14 +158,12 @@ export const GraphCanvas = (function() {
                 graphGroup.add(textGroup);
                 graphGroup.add(spriteGroup);
 
-                this.initGui();
+                addGUI(mainScene, lineGroup, nodeSphereGroup);
             },
             animate3d: function() {
                 if (camera.position.x === 0 && camera.position.y === 0) {
                     // If camera still in default position (not user modified)
                     camera.lookAt(graphGroup.position);
-                    //we're assuming that we're working in narratives here, and only on one.
-                    //camera.position.z = Math.cbrt(this.state.responseData.narratives[0].objects.length) * CAMERA_DISTANCE2NODES_FACTOR;
                 }
                 if(textGroup && textGroup.children) {
                     for (let i = 0; i < textGroup.children.length; i++) {
@@ -196,63 +180,42 @@ export const GraphCanvas = (function() {
                 renderer.render(mainScene, camera);
             },
             animate: function() {
-                //hello
+                console.log('animate');
                 if(_frameId && typeof _frameId === 'object') {
                     _frameId();
                 }
 
-                animating = true;
-
-                //if we haven't already put in our 3d objects
+                //if we haven't already generated our 3d objects
+                //only map data if the react state has changed from changing a query? Should likely do later.
                 if(graphGroup.children.length === 0) {
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
-                    if (!fetchingJson && sourceUrl && mappedData !== null) {
+                    if (!fetchingJson && mappedData !== null) {
                         //this really only should ever execute once per query, ensure it.
                         fetchingJson = true;
+                        //add our 3d manifestation of nodes and links
+                        instance.add3dStuff();
+                        //and let d3 do some maths with it.
+                        layout = graphLayout.createForceLayout(mappedData);
 
-                        //only map data if the state has changed?
-                        if (graphGroup.children.length === 0) {
-                            //add our 3d manifestation of nodes and links
-                            instance.add3dStuff();
-                            layout = graphLayout.createForceLayout(mappedData);
-
-                        }
                     } else {
                         console.log("missing: fetchingjson || graphql sourceurl || mapped data");
                     }
 
                 } else {
                     instance.animate3d();
-                    instance.update3dStuff(mappedData, layout, 'id');
+                    instance.update3dStuff('id');
 
                     if(layout && layout.graph) {
-                        for (let i=0; i<warmupTicks; i++) {
-                            layout[isD3Sim?'tick':'step']();
-                        } // Initial ticks before starting to render
-                        if(mappedData && mappedData.hasOwnProperty('nodes') && mappedData.nodes.length > 0) {
-
-                            let layoutTick = function() {
-                                if (cntTicks++ > cooldownTicks || (new Date()) - startTickTime > cooldownTime) {
-                                    instance.setFrameId(null); // Stop ticking graph
-                                }
-                                layout[isD3Sim?'tick':'step'](); // Tick it
-                            };
-
-                            instance.setFrameId(layoutTick);
-                        }
-
+                        const layoutTick = layout[isD3Sim?'tick':'step']();
+                        instance.setFrameId(layoutTick);
                     }
                 }
-
                 //and the window needs to request a new frame to do this all again
                 window.requestAnimationFrame( instance.animate );
             },
             getRenderer:  function() {
               return renderer;
-            },
-            getCamera: function() {
-              return camera;
             },
             initThreeControls: function() {
                 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
@@ -278,6 +241,7 @@ export const GraphCanvas = (function() {
                 // cancelAnimationFrame() won't throw an error
             },
             updateControls: function() {
+                //here for if I actually get that Leap Controller going properly
                 if(swiper) {
                     swiper.update((g) => swipe(g));
                 }
@@ -285,138 +249,16 @@ export const GraphCanvas = (function() {
                     controls.update();
                 }
             },
-            update3dStuff: function(mappedGraphedData, layout, nodeIdField) {
-                mappedData = mappedGraphedData;
-
+            update3dStuff: function(nodeIdField) {
                 // Update nodes position
                 mappedData.nodes.forEach(node => {
-                    const mesh = node.mesh;
-                    const sprite = node.img;
-                    const displayText = node.displayText;
-
-                    //if (!mesh && !sprite) return;
-
-                    const pos = isD3Sim ? node : layout.getNodePosition(node[nodeIdField]);
-
-                    if(mesh) {
-                        mesh.position.x = pos.x;
-                        mesh.position.y = pos.y || 0;
-                        mesh.position.z = pos.z || 0;
-                    }
-
-                    if(sprite) {
-                        sprite.position.x = pos.x;
-                        sprite.position.y = pos.y;
-                        sprite.position.z = pos.z;
-                    }
-
-                    if(displayText) {
-                        const centerOffset = -0.5 * ( displayText.geometry.boundingBox.max.x - displayText.geometry.boundingBox.min.x );
-                        //displayText.position.x = centerOffset + pos.x;
-                        displayText.position.x = pos.x;
-                        displayText.position.y = pos.y;
-                        displayText.position.z = pos.z;
-                    }
-
+                    graphLayout.updateNodePos(node);
                 });
 
                 // Update links position
                 mappedData.links.forEach(link => {
-                    const line = link.__line;
-                    if (!line) return;
-
-                    const pos = isD3Sim
-                            ? link
-                            : layout.getLinkPosition(layout.graph.getLink(link.source, link.target).id),
-                        start = pos[isD3Sim ? 'source' : 'from'],
-                        end = pos[isD3Sim ? 'target' : 'to'],
-                        linePos = line.geometry.attributes.position;
-
-                    linePos.array[0] = start.x;
-                    linePos.array[1] = start.y || 0;
-                    linePos.array[2] = start.z || 0;
-                    linePos.array[3] = end.x;
-                    linePos.array[4] = end.y || 0;
-                    linePos.array[5] = end.z || 0;
-
-                    linePos.needsUpdate = true;
-                    line.geometry.computeBoundingSphere();
-
-
+                    graphLayout.updateLinkPos(link);
                 });
-            },
-            initGui: function() {
-
-                const gui = new dat.GUI();
-                const param = {};
-
-                if(mainScene && mainScene.fog) {
-                    param.sceneFogColor = mainScene.fog.color.getHex();
-                    param.sceneFogNear = mainScene.fog.near;
-                    param.sceneFogFar = mainScene.fog.far;
-                    param.sceneFogVisible = mainScene.fog;
-                }
-
-                if(lineGroup && lineGroup.children.length) {
-                    param.lineMaterial = lineGroup.children[0].material;
-                    param.lineColor = param.lineMaterial.color.getHex();
-                    param.lineOpacity = param.lineMaterial.opacity;
-                }
-
-
-                if(nodeSphereGroup && nodeSphereGroup.children.length) {
-                    param.nodeSphereMaterial = nodeSphereGroup.children[0].material;
-                    param.nodeOpacity = param.nodeSphereMaterial.opacity;
-                }
-
-                var sceneFolder = gui.addFolder('Scene');
-
-                if (param.sceneFogColor) {
-                    sceneFolder.addColor(param, 'sceneFogColor').onChange(function(val){
-                        mainScene.fog.color = new THREE.Color(val);
-                    });
-                }
-
-                if (param.sceneFogNear) {
-                    sceneFolder.add(param, 'sceneFogNear', 0, 10000, 0).onChange(function(val){
-                        mainScene.fog.near = val;
-                    });
-                }
-
-                if (param.sceneFogFar) {
-                    sceneFolder.add(param, 'sceneFogFar', 0, 10000, 10000).onChange(function(val){
-                        mainScene.fog.far = val;
-                    });
-                }
-
-                var linkFolder = gui.addFolder('Links');
-
-                if (param.lineMaterial && param.lineColor) {
-                    linkFolder.addColor(param, 'lineColor').onChange(function(val){
-                        for (let i = 0; i < lineGroup.children.length; i++) {
-                            lineGroup.children[i].material.color.setHex(val);
-                        }
-                        //console.log(lines.getObjectByProperty('type', 'LineBasicMaterial'));
-                    });
-                }
-
-                if (param.lineOpacity) {
-                    linkFolder.add( param, 'lineOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-                        for (let i = 0; i < lineGroup.children.length; i++) {
-                            lineGroup.children[i].material.opacity = val;
-                        }
-                    } );
-                }
-
-                var nodeFolder = gui.addFolder('Nodes');
-
-                if (param.nodeOpacity) {
-                    nodeFolder.add( param, 'nodeOpacity', 0, 1, 0.1 ).onChange( function ( val ) {
-                        for (let i = 0; i < nodeSphereGroup.children.length; i++) {
-                            nodeSphereGroup.children[i].material.opacity = val;
-                        }
-                    } );
-                }
             },
             resizeCanvas: function(width, height) {
                 if (width && height) {
@@ -425,14 +267,8 @@ export const GraphCanvas = (function() {
                     camera.updateProjectionMatrix();
                 }
             },
-            getFrameId: function() {
-              return _frameId;
-            },
             setFrameId: function(frameId) {
                 _frameId = frameId;
-            },
-            setLayout: function(l) {
-                layout = l;
             },
             getMappedData: function() {
                 return mappedData;
@@ -440,11 +276,11 @@ export const GraphCanvas = (function() {
             setMappedData: function(data) {
                 mappedData = data;
             },
-            getFetchingJson: function() {
+            isFetchingJson: function() {
                 return fetchingJson;
             },
             setFetchingJson: function(fJ) {
-                   fetchingJson = fJ;
+                fetchingJson = fJ;
             }
         }
     }

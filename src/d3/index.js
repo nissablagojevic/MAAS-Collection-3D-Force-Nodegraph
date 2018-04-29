@@ -4,9 +4,6 @@ import graph from 'ngraph.graph';
 import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 
-import {GraphCanvas} from '../components/canvas.js';
-
-
 export const GraphLayout = (function() {
     let instance;
     //d3 force stuff
@@ -16,18 +13,13 @@ export const GraphLayout = (function() {
         .force('center', d3.forceCenter())
         .stop();
 
-    //forceEngine can be d3 or ngraph
+    //forceEngine can be d3 or ngraph but I've only made it work with ngraph at the mo'
     const forceEngine = 'ngraph';
     const isD3Sim = forceEngine !== 'ngraph';
 
     const numDimensions = 3;
     const idField = 'id';
-    const warmupTicks = 0;
-    const cooldownTicks = Infinity;
-    //time in ms
-    const cooldownTime = 15000;
-    let cntTicks = 0;
-    const startTickTime = new Date();
+
     let data = null;
     let layout = null;
 
@@ -65,6 +57,62 @@ export const GraphLayout = (function() {
                 }
 
                 return layout;
+            },
+            isD3Sim: function() {
+                return isD3Sim;
+            },
+            updateLinkPos: function(link) {
+                const line = link.__line;
+                if (!line) return;
+
+                const pos = isD3Sim
+                        ? link
+                        : layout.getLinkPosition(layout.graph.getLink(link.source, link.target).id);
+                const start = pos[isD3Sim ? 'source' : 'from'];
+                const end = pos[isD3Sim ? 'target' : 'to'];
+                const linePos = line.geometry.attributes.position;
+
+                linePos.array[0] = start.x;
+                linePos.array[1] = start.y || 0;
+                linePos.array[2] = start.z || 0;
+                linePos.array[3] = end.x;
+                linePos.array[4] = end.y || 0;
+                linePos.array[5] = end.z || 0;
+
+                linePos.needsUpdate = true;
+                line.geometry.computeBoundingSphere();
+
+                return link;
+
+            },
+            updateNodePos: function(node) {
+                const mesh = node.mesh;
+                const sprite = node.img;
+                const displayText = node.displayText;
+
+                const pos = isD3Sim ? node : layout.getNodePosition(node[idField]);
+
+                if(mesh) {
+                    mesh.position.x = pos.x;
+                    mesh.position.y = pos.y || 0;
+                    mesh.position.z = pos.z || 0;
+                }
+
+                if(sprite) {
+                    sprite.position.x = pos.x;
+                    sprite.position.y = pos.y;
+                    sprite.position.z = pos.z;
+                }
+
+                if(displayText) {
+                    //const centerOffset = -0.5 * ( displayText.geometry.boundingBox.max.x - displayText.geometry.boundingBox.min.x );
+                    //displayText.position.x = centerOffset + pos.x;
+                    displayText.position.x = pos.x;
+                    displayText.position.y = pos.y;
+                    displayText.position.z = pos.z;
+                }
+
+                return node;
             }
         }
     }

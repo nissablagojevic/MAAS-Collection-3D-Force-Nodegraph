@@ -49,33 +49,23 @@ export function mapData(data) {
     if(data && data.hasOwnProperty('narratives')) {
         //for each object in our query map it to our graph Schema and store that our nodeData var
         data.narratives.forEach((narrative) => {
-
                 mapNodes(narrative, graphSchema, 'narrative')
-
         });
 
         //for the first narrative's objects returned in the query, map the objects as nodes and put that in our graphschema
         data.narratives[0].objects.forEach((obj) => {
-
                 mapNodes(obj, graphSchema, 'object')
-
         });
 
         //for the first narrative map each object's terms to nodes and put that in our graphschema
         data.narratives[0].objects.forEach((obj) => {
-
             obj.terms.forEach((term) => {
-
                     mapNodes(term, graphSchema, 'term')
-
             });
-
         });
 
         //for each of the first narrative's object, map the link between the object nodes and term nodes and put that in our graphschema
         data.narratives[0].objects.forEach((obj) => {mapLinks(obj, graphSchema, 'object', 'terms')});
-
-
     }
 
     return graphSchema;

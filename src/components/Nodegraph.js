@@ -7,9 +7,6 @@ import './Nodegraph.css';
 //3d stuff
 import {GraphCanvas} from './canvas.js';
 
-//force graphing calculations
-import {GraphLayout} from '../d3';
-
 class NodeGraph extends Component {
     constructor() {
         super();
@@ -17,15 +14,10 @@ class NodeGraph extends Component {
             width: '100%',
             height: '100vh',
             fetchingJson: false,
-            animating: true,
-            responseData: null,
-            mappedData: null
+            responseData: null
         };
 
         this.graphCanvas = GraphCanvas.getInstance();
-        this.graphLayout = GraphLayout.getInstance();
-
-        this.animate = this.animate.bind(this);
     }
 
     componentDidMount() {
@@ -47,22 +39,15 @@ class NodeGraph extends Component {
             console.log('DATA RETRIEVAL ERROR');
             console.log(e);
         });
-
-
-
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        console.log('component did update');
-
+    componentDidUpdate(prevProps) {
         if(this.state.responseData) {
-            console.log('have response data');
             const mappedData = mapData(this.state.responseData);
             this.graphCanvas.setMappedData(mappedData);
             if(this.graphCanvas.getMappedData()) {
                 this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
-                this.graphCanvas.setFrameId(null); // Pause simulation
-                if(this.graphCanvas.getFetchingJson()) {
+                if(this.graphCanvas.isFetchingJson()) {
                     this.graphCanvas.setFetchingJson(false);
                     this.graphCanvas.startLoop();
                 }
@@ -88,50 +73,9 @@ class NodeGraph extends Component {
         }
     }
 
-    /**ANIMATING STUFF STARTS HERE**/
     componentWillUnmount() {
         this.graphCanvas.stopLoop();
     }
-
-    animate(prevProps, prevState) {
-        if(this.getFrameId()) {
-            this.getFrameId()();
-        }
-
-        //note, stopping the animation loop prevents mouse controls from firing too
-        if (!this.state.animating) {
-                //the renderer owns the mainScene
-            console.log(this.renderer);
-            //the mainScene owns the children AmbientLight, DirectLight, and our Graph group...
-            console.log(this.mainScene);
-            //the graphGroup owns the Lines and Node Meshes
-            console.log(this.graphGroup);
-            //stoploop cancels the animation loop...
-            this.stopLoop();
-        }
-
-        //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
-        //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
-        if(!this.state.fetchingJson && sourceUrl && this.state.responseData !== null) {
-            //this really only should ever execute once per query, ensure it.
-            this.setState({fetchingJson: true, mappedData: mapData(this.state.responseData)});
-
-            //only map data if the state has changed
-            if(prevState !== this.state) {
-                //add our 3d manifestation of nodes and links
-                this.graphCanvas.add3dStuff();
-            }
-        }
-
-        this.graphCanvas.animate3d();
-
-        if(this.state.animating) {
-            //and the window needs to request a new frame to do this all again
-            window.requestAnimationFrame( this.graphCanvas.animate );
-        }
-    }
-    /**ANIMATING STUFF ENDS HERE**/
-
 
     render() {
         return (
