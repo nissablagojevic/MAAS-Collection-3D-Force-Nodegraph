@@ -15,7 +15,7 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
 
     if(!skyBoxTexture) {
         // Textures
-        const r = "http://localhost:3000/";
+        const r = "./";
         urls = [ r + "bluecloud.jpg", r + "bluecloud.jpg",
             r + "bluecloud.jpg", r + "bluecloud.jpg",
             r + "bluecloud.jpg", r + "bluecloud.jpg" ];

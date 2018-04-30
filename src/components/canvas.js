@@ -16,6 +16,9 @@ export const GraphCanvas = (function() {
     const isD3Sim = graphLayout.isD3Sim();
     let _frameId = null;
     let layout = null;
+    //stop layout from drifting forever. need to implement dynamic based on whole graph width
+    const MAXTICKS = 400;
+    let tickCounter = 0;
 
     renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
@@ -204,9 +207,10 @@ export const GraphCanvas = (function() {
                     instance.animate3d();
                     instance.update3dStuff();
 
-                    if(layout && layout.graph) {
+                    if(layout && layout.graph && tickCounter < MAXTICKS) {
                         const layoutTick = layout[isD3Sim?'tick':'step']();
                         instance.setFrameId(layoutTick);
+                        tickCounter++;
                     }
                 }
                 //and the window needs to request a new frame to do this all again
