@@ -106,7 +106,6 @@ export const GraphCanvas = (function() {
     const nodeSphereGroup = new THREE.Group();
     const lineGroup = new THREE.Group();
 
-    const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
 
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
@@ -132,22 +131,11 @@ export const GraphCanvas = (function() {
             add3dStuff: function() {
                 this.initThreeControls();
                 //map the newly created nodes to spheres
+                console.log("ADD 3d STUFF");
+                console.log(mappedData);
                 mappedData.nodes.forEach(node => {
-
-                    //this needs to be done asynchronously with a loading image fallback
-                    // would probably greatly help memory usage
-                    // the adding of stuff to the scene is our main memory bottleneck
-                    imageLoader
-                        //.load( node.mainImage + performance.now(), function ( image ) {
-                        .load( node.mainImage, function ( image ) {
-                            addSphere(node, image, nodeSphereGroup, true);
-                        },
-                        undefined,
-                        function() {
-                            //Image loading error nodes.
-                            addText(node, textGroup);
-                        });
-
+                    addSphere(node, nodeSphereGroup, true);
+                    addText(node, textGroup);
                 });
 
                 //map the newly created links to lines in THREE.js and add them to the scene

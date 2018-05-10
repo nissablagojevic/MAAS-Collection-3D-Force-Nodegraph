@@ -46,6 +46,9 @@ export function mapData(data) {
         links: []
     };
 
+    console.log("MAP DATA");
+    console.log(data);
+
     if(data && data.hasOwnProperty('narratives')) {
         //for each object in our query map it to our graph Schema and store that our nodeData var
         data.narratives.forEach((narrative) => {
