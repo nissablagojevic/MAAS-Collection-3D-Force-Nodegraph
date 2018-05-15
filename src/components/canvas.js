@@ -127,6 +127,15 @@ export const GraphCanvas = (function() {
         mousePos.y = -2;
         let mappedData = null;
 
+
+
+        const errorImage = new THREE.ImageLoader().setCrossOrigin( '*' );
+
+        errorImage.load('error.jpg', (image) => {
+            console.log('error image hoisted');
+            return image;
+        });
+
         return {
             add3dStuff: function() {
                 this.initThreeControls();
@@ -134,8 +143,22 @@ export const GraphCanvas = (function() {
                 console.log("ADD 3d STUFF");
                 console.log(mappedData);
                 mappedData.nodes.forEach(node => {
-                    addSphere(node, nodeSphereGroup, true);
-                    addText(node, textGroup);
+                    if(node.type === 'object') {
+                        if(!node.mainImage) {
+                            node.mainImage = './error.jpg';
+                        }
+                        addSphere(node, nodeSphereGroup, true);
+                    }
+
+                    if(node.type === 'narrative') {
+                        node.mainImage = './error.jpg';
+                        addSphere(node, nodeSphereGroup, true);
+                    }
+
+                    if(node.type === 'term') {
+                        addText(node, textGroup);
+                    }
+
                 });
 
                 //map the newly created links to lines in THREE.js and add them to the scene

@@ -28,10 +28,10 @@ export default function addText(node, graphGroup, textMaterials = null) {
             graphGroup.add(node.displayText = textMesh);
         },
         function (xhr) {
-            console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+            //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
         },
         function(err) {
-            console.log( 'An error happened' );
+            console.log( 'An error happened loading the font' );
             console.log(err);
         });
 }
