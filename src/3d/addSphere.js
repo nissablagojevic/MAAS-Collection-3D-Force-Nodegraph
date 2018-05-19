@@ -4,13 +4,8 @@ export const nodeResolution = 20;
 export const nodeMaterials = {};
 export const nodeRelSize = 10;
 export const nodeGeometries = {};
+export const defaultGeometry = new THREE.SphereBufferGeometry(Math.cbrt(1) * nodeRelSize, nodeResolution, nodeResolution);
 
-//this val would affect the radius of the sphere, but we don't have info mapped to that.
-//if we did, each sphere would need to be created within the addSphere method
-const val = 1;
-if (!nodeGeometries.hasOwnProperty(val)) {
-  nodeGeometries[val] = new THREE.SphereBufferGeometry(Math.cbrt(val) * nodeRelSize, nodeResolution, nodeResolution);
-}
 
 
 export default function addSphere(node, graphGroup, addData = false) {
@@ -18,17 +13,7 @@ export default function addSphere(node, graphGroup, addData = false) {
     const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
 
     // main memory bottleneck
-    const image = imageLoader
-        //.load( node.mainImage + performance.now(), function ( image ) {
-        .load( node.mainImage, ( image ) => {
-            return image;
-        },
-        undefined,
-        () => {
-            console.log('image load failure: ' + node.id + " " + node.name);
-        });
-
-
+    const image = imageLoader.load( node.mainImage );
     const texture = new THREE.CanvasTexture( image );
 
     //prevent three.js complaining about images not being 2^n width and height
@@ -44,7 +29,20 @@ export default function addSphere(node, graphGroup, addData = false) {
         } );
 
 
-    const sphere = new THREE.Mesh(nodeGeometries[val], material);
+    let sphereGeometry;
+
+    if (node.hasOwnProperty('size')) {
+        sphereGeometry = new THREE.SphereBufferGeometry(Math.cbrt(node.size) * nodeRelSize, nodeResolution, nodeResolution);
+
+        //currently only the central node has its own size.
+        //Need to find a good place to separate configurations for special nodes.
+        material.emissive = new THREE.Color(0xFFFFFF);
+
+    } else {
+        sphereGeometry = defaultGeometry;
+    }
+
+    const sphere = new THREE.Mesh(sphereGeometry, material);
 
     sphere.name = node.name; // Add label
     if (addData) {

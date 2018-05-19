@@ -11,6 +11,7 @@ export const sourceUrl = 'https://api.maas.museum/graphql?query=';
 export const sourceQuery = `{narratives(filter:{_id:2087}){
     _id
     title
+    description
     objects(limit: 100) {
       _id
       title
@@ -69,6 +70,7 @@ export function mapData(data) {
 
         //for each of the first narrative's object, map the link between the object nodes and term nodes and put that in our graphschema
         data.narratives[0].objects.forEach((obj) => {mapLinks(obj, graphSchema, 'object', 'terms')});
+
     }
 
     return graphSchema;

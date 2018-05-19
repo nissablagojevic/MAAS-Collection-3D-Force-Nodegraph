@@ -33,6 +33,7 @@ export const GraphLayout = (function() {
                 console.log('createForceLayout');
                 console.log(data);
                 // Feed data to force-directed layout
+                // either remove the d3 version or get it working with this later.
                 if (isD3Sim && data !== null) {
                     // D3-force
                     (layout = d3ForceLayout)
@@ -44,13 +45,22 @@ export const GraphLayout = (function() {
                         .id(d => d[idField])
                         .links(data.links);
                 } else {
+                    // currently using ngraph for the maths in the force layout
                     // ngraph
                     const graph = ngraph.graph();
 
+                    console.log('ngraph graph');
+                    console.log(graph);
+
                     if(data !== null) {
+                        const centralNode = data.nodes[0];
                         data.nodes.forEach(node => { graph.addNode(node[idField]); });
                         data.links.forEach(link => { graph.addLink(link.source, link.target); });
+
                         layout = ngraph['forcelayout' + (numDimensions === 2 ? '' : '3d')](graph);
+
+                        const nodeToPin = graph.getNode(centralNode[idField]);
+                        layout.pinNode(nodeToPin, true);
                         layout.graph = graph; // Attach graph reference to layout
                     }
 

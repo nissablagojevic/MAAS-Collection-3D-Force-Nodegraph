@@ -92,7 +92,7 @@ class NodeGraph extends Component {
         if(this.state.selectedNode) {
             console.log(this.state.selectedNode);
 
-            const {id, name, type, mainImage, description, date, images} = this.state.selectedNode;
+            const {id, name, type, mainImage, description, date} = this.state.selectedNode;
 
             info = <div>
                 <dt>Name: </dt>
@@ -101,8 +101,7 @@ class NodeGraph extends Component {
                 <dd>{date}</dd>
                 <dt>Description: </dt>
                 <dd>{description}</dd>
-                <dt>Thumbnail: </dt>
-                <dd><img src={mainImage}/></dd>
+                {type !== 'narrative' && <span><dt>Thumbnail: </dt><dd><img src={mainImage}/></dd></span>}
             </div>;
         }
 

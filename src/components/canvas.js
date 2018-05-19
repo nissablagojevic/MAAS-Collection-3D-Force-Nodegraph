@@ -9,6 +9,7 @@ export const GraphCanvas = (function() {
     let instance;
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
+        alpha: true,
     });
 
     //d3 graph calculation stuff
@@ -106,6 +107,7 @@ export const GraphCanvas = (function() {
     const nodeSphereGroup = new THREE.Group();
     const lineGroup = new THREE.Group();
 
+    const errorImage = new THREE.ImageLoader().setCrossOrigin( '*' );
 
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
@@ -128,13 +130,14 @@ export const GraphCanvas = (function() {
         let mappedData = null;
 
 
-
-        const errorImage = new THREE.ImageLoader().setCrossOrigin( '*' );
-
-        errorImage.load('error.jpg', (image) => {
-            console.log('error image hoisted');
-            return image;
-        });
+        errorImage.load('error.jpg',
+            (image) => {
+                return image;
+            },
+            undefined,
+            (e) => {
+                console.log('error image failed to load');
+            });
 
         return {
             add3dStuff: function() {
@@ -151,8 +154,11 @@ export const GraphCanvas = (function() {
                     }
 
                     if(node.type === 'narrative') {
-                        node.mainImage = './error.jpg';
+                        node.mainImage = './suntex.jpg';
+                        node.size = 20;
+
                         addSphere(node, nodeSphereGroup, true);
+                        //addText(node, textGroup);
                     }
 
                     if(node.type === 'term') {

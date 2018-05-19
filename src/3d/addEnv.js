@@ -5,12 +5,17 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
 
     let urls;
 
+
+    var light = new THREE.PointLight( 0xFFA500, 1, 2500 );
+    light.position.set( 0, 0, 0 );
+    scene.add( light );
+
     if(!ambientLight) {
         ambientLight = new THREE.AmbientLight(0xbbbbbb);
     }
 
     if(!directLight) {
-        directLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        //directLight = new THREE.DirectionalLight(0xffffff, 0.6);
     }
 
     if(!skyBoxTexture) {
