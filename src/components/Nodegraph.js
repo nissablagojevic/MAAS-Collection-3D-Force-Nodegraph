@@ -1,6 +1,6 @@
 import { default as React, Component } from 'react';
 import qwest from 'qwest';
-import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
+import {sourceUrl, sourceQuery, mapData, narrativesList} from './resolvers.js';
 
 import './Nodegraph.css';
 
@@ -15,12 +15,16 @@ class NodeGraph extends Component {
             height: '100vh',
             fetchingJson: false,
             responseData: null,
-            selectedNode: null
+            selectedNode: null,
+            narrative: 2087,
         };
 
         this.graphCanvas = GraphCanvas.getInstance();
         this.handleClick = this.handleClick.bind(this);
         this.renderInfo = this.renderInfo.bind(this);
+        this.renderNarrativeSelect = this.renderNarrativeSelect.bind(this);
+        this.selectNarrative = this.selectNarrative.bind(this);
+
     }
 
     componentDidMount() {
@@ -32,11 +36,28 @@ class NodeGraph extends Component {
         //has updated the component with the proper width and height, and there's fallback values
         this.mount.appendChild(this.graphCanvas.getRenderer().domElement);
 
-        //fetch data from API after initialisation
-        qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
-            console.log('qwest get');
-            this.setState({responseData: response.data});
+        let urlNarrative;
 
+        if(this.props.match.params.id) {
+            urlNarrative = parseInt(this.props.match.params.id, 10);
+        } else {
+            urlNarrative = this.state.narrative;
+        }
+
+        //fetch data from API after initialisation
+        qwest.get(sourceUrl + sourceQuery(urlNarrative)).then((xhr, response) => {
+            console.log('qwest get');
+            this.setState({responseData: response.data, narrative: urlNarrative});
+
+        }).catch(function(e, xhr, response) {
+            // Process the error in getting the json file
+            console.log('DATA RETRIEVAL ERROR');
+            console.log(e);
+        });
+
+        //fetch data from API after initialisation
+        qwest.get(sourceUrl + narrativesList).then((xhr, response) => {
+            this.setState({narrativesList: response.data.narratives});
         }).catch(function(e, xhr, response) {
             // Process the error in getting the json file
             console.log('DATA RETRIEVAL ERROR');
@@ -45,6 +66,25 @@ class NodeGraph extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        console.log("COMPONENT DID UPDATE");
+
+
+
+        //once we add react state to allow parameters to change, we'll need to check if we need to request new data
+        //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
+        //not fetching data again.
+        if (prevProps !== this.props) {
+            qwest.get(sourceUrl + sourceQuery(this.state.narrative)).then((xhr, response) => {
+                console.log('qwest reget');
+                this.setState({responseData: response.data});
+            }).catch(function (e, xhr, response) {
+                // Process the error in getting the json file
+                console.log('DATA RETRIEVAL ERROR');
+                console.log(e);
+            });
+        }
+
+
         if(this.state.responseData) {
             //super shallow check for object sameness
             if(JSON.stringify(this.state.responseData) !== JSON.stringify(prevState.responseData) ) {
@@ -63,20 +103,6 @@ class NodeGraph extends Component {
             this.graphCanvas.setFetchingJson(true);
         }
 
-
-        //once we add react state to allow parameters to change, we'll need to check if we need to request new data
-        //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
-        //not fetching data again.
-        if (prevProps !== this.props) {
-            qwest.get(sourceUrl + sourceQuery).then((xhr, response) => {
-                console.log('qwest reget');
-                this.setState({fetchingJson: false, responseData: response.data});
-            }).catch(function (e, xhr, response) {
-                // Process the error in getting the json file
-                console.log('DATA RETRIEVAL ERROR');
-                console.log(e);
-            });
-        }
     }
 
     componentWillUnmount() {
@@ -108,6 +134,36 @@ class NodeGraph extends Component {
         return (<div className="info">{info}</div>);
     }
 
+    renderNarrativeSelect() {
+        const narratives = this.state.narrativesList;
+
+        if(narratives) {
+            const options = [];
+
+            narratives.forEach((narrative) => {
+                options.push(<option key={narrative._id} value={narrative._id}>{narrative.title}</option>);
+            });
+
+            return(
+                <select value={this.state.narrative} onChange={this.selectNarrative}>
+                {options}
+                </select>
+            );
+        }
+    }
+
+    selectNarrative(event) {
+        let narrative = parseInt(event.target.value, 10);
+        console.log(this.props);
+
+        const location = {
+            pathname: `/${narrative}`,
+        };
+
+        this.setState({narrative: narrative});
+        this.props.history.push(location);
+    }
+
     render() {
         return (
             <div
@@ -115,6 +171,10 @@ class NodeGraph extends Component {
                 ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
                 onClick={() => this.handleClick()}>
                 <div className="instructions">
+                    <div className="narrativeSelect">
+                        Selected Narrative:
+                        {this.renderNarrativeSelect()}
+                    </div>
                     Camera controls:
                     Tap &amp; Drag to orbit. Pinch to zoom.
                     Tap on a sphere to select that object.

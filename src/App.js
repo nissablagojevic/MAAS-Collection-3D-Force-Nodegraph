@@ -12,8 +12,6 @@ class App extends Component {
     constructor() {
         super();
         this.state = {
-            development: '',
-            wordPress: ''
         }
     }
 
@@ -27,36 +25,11 @@ class App extends Component {
     }
 
 
-    renderRoutes(env) {
-        var prefix = '/';
-        if (env === 'production') {
-            prefix = '/maas/';
-        }
-
-        return (<div className="routes">
-            <Route exact path={prefix} component={Nodegraph} />
-            <Route path={prefix + 'about'} component={About} />
-        </div>);
-
-    }
-
-    setEnv() {
-        var currentUrl = window.location.host;
-        var development = this.state.development;
-        if (currentUrl.indexOf('nissablagojevic') >= 0) {
-            development = 'production';
-        }
-        else {
-            development = 'development';
-        }
-        return development;
-    }
-
     render() {
         return (
             <div id="page">
                 <Helmet
-                    titleTemplate="%s | NodeGraph of Museum Collection"
+                    titleTemplate="%s | Intercollectic Planetary"
                     meta={[
                         {
                             name: `viewport`,
@@ -64,11 +37,11 @@ class App extends Component {
                         },
                         {
                             name: `description`,
-                            content: `maas api example application`
+                            content: `Force directed graph of the MAAS Collection`
                         },
                         {
                             property: `og:type`,
-                            content: `article`
+                            content: `website`
                         },
                         {
                             name: `theme-color`,
@@ -82,8 +55,11 @@ class App extends Component {
 
                 <Router>
                     <div>
-                        <Navigation development={this.setEnv()}/>
-                        {this.renderRoutes(this.setEnv())}
+                        <Navigation/>
+                        <div>
+                            <Route path={'/:id'} component={Nodegraph} />
+                            <Route path={'about'} component={About} />
+                        </div>
                     </div>
                 </Router>
             </div>

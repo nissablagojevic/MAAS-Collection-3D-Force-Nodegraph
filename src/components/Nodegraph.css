@@ -34,3 +34,7 @@
     color: white;
     font-size: 16px;
 }
+
+.narrativeSelect select {
+    color: #000;
+}

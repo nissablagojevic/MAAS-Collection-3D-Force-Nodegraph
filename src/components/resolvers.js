@@ -4,15 +4,23 @@ import mapLink from '../schema/link.js';
 //graphql data
 export const sourceUrl = 'https://api.maas.museum/graphql?query=';
 
+export const narrativesList = `{
+            narratives {
+                _id
+                title
+            }
+        }`;
+
 //_id:2087 = antiquities
 //_id:69 = ceramic highlights
 //_id:743 = anatomical and botanical models - tight clusters
 
-export const sourceQuery = `{narratives(filter:{_id:2087}){
+export function sourceQuery(narrativeId) {
+    const graphQLQuery = `{narratives(filter:{_id:${narrativeId}}){
     _id
     title
     description
-    objects(limit: 100) {
+    objects(limit: 2000) {
       _id
       title
       displayTitle
@@ -33,6 +41,9 @@ export const sourceQuery = `{narratives(filter:{_id:2087}){
     }
   }
 }`;
+
+    return graphQLQuery;
+}
 
 /*
  * Description: resolve graphQl data against 3d-force-graph schema
