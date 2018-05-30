@@ -20,7 +20,7 @@ export function sourceQuery(narrativeId) {
     _id
     title
     description
-    objects(limit: 2000) {
+    objects(limit: 200) {
       _id
       title
       displayTitle

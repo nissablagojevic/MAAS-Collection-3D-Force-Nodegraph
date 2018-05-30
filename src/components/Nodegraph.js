@@ -44,7 +44,7 @@ class NodeGraph extends Component {
             urlNarrative = this.state.narrative;
         }
 
-        //fetch data from API after initialisation
+        //fetch narrative data from API after initialisation
         qwest.get(sourceUrl + sourceQuery(urlNarrative)).then((xhr, response) => {
             console.log('qwest get');
             this.setState({responseData: response.data, narrative: urlNarrative});
@@ -55,7 +55,7 @@ class NodeGraph extends Component {
             console.log(e);
         });
 
-        //fetch data from API after initialisation
+        //fetch list of narratives from API
         qwest.get(sourceUrl + narrativesList).then((xhr, response) => {
             this.setState({narrativesList: response.data.narratives});
         }).catch(function(e, xhr, response) {
@@ -74,6 +74,7 @@ class NodeGraph extends Component {
         //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
         //not fetching data again.
         if (prevProps !== this.props) {
+            this.graphCanvas.remove3dStuff();
             qwest.get(sourceUrl + sourceQuery(this.state.narrative)).then((xhr, response) => {
                 console.log('qwest reget');
                 this.setState({responseData: response.data});
@@ -85,7 +86,9 @@ class NodeGraph extends Component {
         }
 
 
-        if(this.state.responseData) {
+        if(this.state.responseData && this.state.responseData.narratives[0]._id === this.state.narrative) {
+            console.log('have response data');
+            console.log(this.state.responseData);
             //super shallow check for object sameness
             if(JSON.stringify(this.state.responseData) !== JSON.stringify(prevState.responseData) ) {
                 const mappedData = mapData(this.state.responseData);
@@ -107,6 +110,7 @@ class NodeGraph extends Component {
 
     componentWillUnmount() {
         this.graphCanvas.stopLoop();
+        this.graphCanvas.remove3dStuff();
     }
 
     handleClick(e) {

@@ -7,10 +7,7 @@ import {initLeapControls, swipe} from "../leap";
 
 export const GraphCanvas = (function() {
     let instance;
-    const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-    });
+
 
     //d3 graph calculation stuff
     const graphLayout = GraphLayout.getInstance();
@@ -21,11 +18,60 @@ export const GraphCanvas = (function() {
     const MAXTICKS = 400;
     let tickCounter = 0;
 
+
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+    });
     renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
 
     //interaction stuff
     let selectedNode = null;
+
+    function doDispose(obj)
+    {
+        if (obj !== null)
+        {
+            for (var i = 0; i < obj.children.length; i++)
+            {
+                doDispose(obj.children[i]);
+            }
+                if(obj.geometry) {
+                    obj.geometry.dispose();
+                }
+                if(obj.material) {
+                    if(obj.material.texture) {
+                        if (typeof obj.material.texture.dispose === 'function') {
+                            obj.material.texture.dispose();
+                        } else {
+                            for (let mat in obj.material.texture) {
+                                if (typeof mat.dispose === 'function') {
+                                    mat.dispose();
+                                }
+                            }
+                        }
+                    }
+
+                    if (typeof obj.material.dispose === 'function') {
+                        obj.material.dispose();
+                    } else {
+                        for (let mat in obj.material) {
+                            if (typeof mat.dispose === 'function') {
+                                mat.dispose();
+                            }
+                        }
+                    }
+                }
+                mainScene.remove(obj);
+
+
+        }
+
+        obj = undefined;
+
+        renderer.render(mainScene, camera);
+    }
 
     function mouseMove(e) {
         //console.log('mouseMove');
@@ -94,18 +140,25 @@ export const GraphCanvas = (function() {
     const raycaster = new THREE.Raycaster();
     const mousePos = new THREE.Vector2();
 
-    //the graphGroup is there for all of our nodes and links, our main actors.
-    const graphGroup = new THREE.Group();
 
     //3d continued... controls.
     //have to import controls as non-ES6 because of scoping issues.
     //see https://stackoverflow.com/questions/28068038/how-do-i-import-additional-plugins-for-an-already-imported-library-using-jspm
     const OrbitControls = require('three-orbit-controls')(THREE);
 
+    //the graphGroup is there for all of our nodes and links, our main actors.
+    const graphGroup = new THREE.Group();
     const textGroup = new THREE.Group();
     const spriteGroup = new THREE.Group();
     const nodeSphereGroup = new THREE.Group();
     const lineGroup = new THREE.Group();
+    textGroup.name = "textGroup";
+    spriteGroup.name = "spriteGroup";
+    nodeSphereGroup.name = "nodeSphereGroup";
+    lineGroup.name = "lineGroup";
+    graphGroup.name = "graphGroup";
+
+    mainScene.add(graphGroup);
 
     const errorImage = new THREE.ImageLoader().setCrossOrigin( '*' );
 
@@ -113,18 +166,14 @@ export const GraphCanvas = (function() {
     const swiper = window.controller.gesture('swipe');
 
     let fetchingJson = false;
+    let changedSet = false;
 
     // Add camera interaction and mousebased input
     const controls = new OrbitControls( camera, renderer.domElement );
 
     function init() {
         instance = this;
-        textGroup.name = "textGroup";
-        spriteGroup.name = "spriteGroup";
-        nodeSphereGroup.name = "nodeSphereGroup";
-        lineGroup.name = "lineGroup";
-        graphGroup.name = "graphGroup";
-        mainScene.add(graphGroup);
+
         mousePos.x = -2; // Initialize off canvas
         mousePos.y = -2;
         let mappedData = null;
@@ -177,7 +226,10 @@ export const GraphCanvas = (function() {
                 graphGroup.add(textGroup);
                 graphGroup.add(spriteGroup);
 
-                addGUI(mainScene, lineGroup, nodeSphereGroup);
+                if(!document.getElementsByClassName('dg').length) {
+                    addGUI(mainScene, lineGroup, nodeSphereGroup);
+
+                }
             },
             animate3d: function() {
                 if (camera.position.x === 0 && camera.position.y === 0) {
@@ -205,12 +257,13 @@ export const GraphCanvas = (function() {
 
                 //if we haven't already generated our 3d objects
                 //only map data if the react state has changed from changing a query? Should likely do later.
-                if(graphGroup.children.length === 0) {
+                if(graphGroup.children.length === 0 || changedSet) {
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
                     if (!fetchingJson && mappedData !== null) {
                         //this really only should ever execute once per query, ensure it.
                         fetchingJson = true;
+                        changedSet = false;
                         //add our 3d manifestation of nodes and links
                         instance.add3dStuff();
                         //and let d3 do some maths with it.
@@ -286,6 +339,12 @@ export const GraphCanvas = (function() {
                     camera.updateProjectionMatrix();
                 }
             },
+            remove3dStuff: function(obj = null) {
+                console.log('remove 3d stuf');
+                //need a proper way to dispose and memory manage here. Probably refactor this whole three js stuff.
+                changedSet = true;
+                doDispose(graphGroup);
+            },
             setFrameId: function(frameId) {
                 _frameId = frameId;
             },
@@ -300,6 +359,12 @@ export const GraphCanvas = (function() {
             },
             setFetchingJson: function(fJ) {
                 fetchingJson = fJ;
+            },
+            getChangedSet: function() {
+                return changedSet;
+            },
+            setChangedSet: function(cS) {
+                changedSet = cS
             },
             selectNode: function() {
                 return selectedNode;
