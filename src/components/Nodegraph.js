@@ -68,16 +68,13 @@ class NodeGraph extends Component {
     componentDidUpdate(prevProps, prevState) {
         console.log("COMPONENT DID UPDATE");
 
-
-
-        //once we add react state to allow parameters to change, we'll need to check if we need to request new data
-        //or just redraw the D3 graph with the existing data. Until then this check will remain broken but default to
-        //not fetching data again.
         if (prevProps !== this.props) {
-            this.graphCanvas.remove3dStuff();
+            //this.graphCanvas.remove3dStuff();
+            this.graphCanvas.setFetchingJson(true);
+
             qwest.get(sourceUrl + sourceQuery(this.state.narrative)).then((xhr, response) => {
                 console.log('qwest reget');
-                this.setState({responseData: response.data});
+                this.setState({responseData: response.data, fetchingJson: false});
             }).catch(function (e, xhr, response) {
                 // Process the error in getting the json file
                 console.log('DATA RETRIEVAL ERROR');
@@ -94,6 +91,8 @@ class NodeGraph extends Component {
                 const mappedData = mapData(this.state.responseData);
                 this.graphCanvas.setMappedData(mappedData);
                 if(this.graphCanvas.getMappedData()) {
+                    console.log("mapped data = ");
+                    console.log(mappedData);
                     this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
                     if(this.graphCanvas.isFetchingJson()) {
                         this.graphCanvas.setFetchingJson(false);
@@ -183,6 +182,7 @@ class NodeGraph extends Component {
                     Tap &amp; Drag to orbit. Pinch to zoom.
                     Tap on a sphere to select that object.
                 </div>
+                <button id="removebutton" onClick={this.graphCanvas.remove3dStuff()}>Remove Stuff</button>
             {this.renderInfo(this.state.selectedNode)}
             </div>
         );

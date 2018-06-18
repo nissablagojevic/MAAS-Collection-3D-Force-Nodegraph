@@ -29,48 +29,60 @@ export const GraphCanvas = (function() {
     //interaction stuff
     let selectedNode = null;
 
+    function removeMeshTextures(material) {
+        console.log(material);
+
+        if (material.map) {
+            material.map.dispose ();
+        }
+        if (material.lightMap){
+            material.lightMap.dispose ();
+        }
+        if (material.bumpMap) {
+            material.bumpMap.dispose ();
+        }
+        if (material.normalMap)    material.normalMap.dispose ();
+        if (material.specularMap)  material.specularMap.dispose ();
+        if (material.envMap)       material.envMap.dispose ();
+
+        material.dispose ();   // disposes any programs associated with the material
+    }
+
     function doDispose(obj)
     {
-        if (obj !== null)
+        console.log("DISPOSE");
+        console.log(obj);
+        if (obj)
         {
-            for (var i = 0; i < obj.children.length; i++)
-            {
-                doDispose(obj.children[i]);
+            if(obj.children && obj.children.length > 0) {
+                console.log('disposing of object children');
+                for (var i = 0; i < obj.children.length; i++)
+                {
+                    doDispose(obj.children[i]);
+                }
             }
-                if(obj.geometry) {
-                    obj.geometry.dispose();
+
+            if(obj.geometry) {
+                console.log('disposing object geometry');
+                obj.geometry.dispose();
+            }
+            if(obj.material) {
+                console.log("MATERIAL IS...");
+                console.log(obj.material);
+                if (obj.material.length > 1) {
+                    obj.material.forEach((mat) => {
+                        console.log("MATERIAL: ");
+                        console.log(mat);
+                        removeMeshTextures(mat);
+                    });
+                } else {
+                    removeMeshTextures(obj.material);
                 }
-                if(obj.material) {
-                    if(obj.material.texture) {
-                        if (typeof obj.material.texture.dispose === 'function') {
-                            obj.material.texture.dispose();
-                        } else {
-                            for (let mat in obj.material.texture) {
-                                if (typeof mat.dispose === 'function') {
-                                    mat.dispose();
-                                }
-                            }
-                        }
-                    }
-
-                    if (typeof obj.material.dispose === 'function') {
-                        obj.material.dispose();
-                    } else {
-                        for (let mat in obj.material) {
-                            if (typeof mat.dispose === 'function') {
-                                mat.dispose();
-                            }
-                        }
-                    }
-                }
-                mainScene.remove(obj);
-
-
+            }
         }
 
+        console.log('setting obj as undefined');
         obj = undefined;
-
-        renderer.render(mainScene, camera);
     }
 
     function mouseMove(e) {
@@ -226,6 +238,8 @@ export const GraphCanvas = (function() {
                 graphGroup.add(textGroup);
                 graphGroup.add(spriteGroup);
 
+                console.log(graphGroup);
+
                 if(!document.getElementsByClassName('dg').length) {
                     addGUI(mainScene, lineGroup, nodeSphereGroup);
 
@@ -256,8 +270,8 @@ export const GraphCanvas = (function() {
                 }
 
                 //if we haven't already generated our 3d objects
-                //only map data if the react state has changed from changing a query? Should likely do later.
-                if(graphGroup.children.length === 0 || changedSet) {
+                if(nodeSphereGroup.children.length === 0 || changedSet) {
+                    console.log('changed set');
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
                     if (!fetchingJson && mappedData !== null) {
@@ -271,17 +285,19 @@ export const GraphCanvas = (function() {
 
                     } else {
                         console.log("missing: fetchingjson || graphql sourceurl || mapped data");
+                        return;
                     }
 
                 } else {
-                    instance.animate3d();
-                    instance.update3dStuff();
+                        instance.animate3d();
+                        instance.update3dStuff();
 
-                    if(layout && layout.graph && tickCounter < MAXTICKS) {
-                        const layoutTick = layout[isD3Sim?'tick':'step']();
-                        instance.setFrameId(layoutTick);
-                        tickCounter++;
-                    }
+                        if(layout && layout.graph && tickCounter < MAXTICKS) {
+                            const layoutTick = layout[isD3Sim?'tick':'step']();
+                            instance.setFrameId(layoutTick);
+                            tickCounter++;
+                        }
+
                 }
                 //and the window needs to request a new frame to do this all again
                 window.requestAnimationFrame( instance.animate );
@@ -323,14 +339,20 @@ export const GraphCanvas = (function() {
             },
             update3dStuff: function() {
                 // Update nodes position
-                mappedData.nodes.forEach(node => {
-                    graphLayout.updateNodePos(node);
-                });
+                if(mappedData) {
+                    if(mappedData.nodes && mappedData.nodes.length > 0) {
+                        mappedData.nodes.forEach(node => {
+                            graphLayout.updateNodePos(node);
+                        });
+                    }
 
-                // Update links position
-                mappedData.links.forEach(link => {
-                    graphLayout.updateLinkPos(link);
-                });
+                    if(mappedData.links && mappedData.links.length > 0) {
+                        // Update links position
+                        mappedData.links.forEach(link => {
+                            graphLayout.updateLinkPos(link);
+                        });
+                    }
+                }
             },
             resizeCanvas: function(width, height) {
                 if (width && height) {
@@ -341,9 +363,64 @@ export const GraphCanvas = (function() {
             },
             remove3dStuff: function(obj = null) {
                 console.log('remove 3d stuf');
+
                 //need a proper way to dispose and memory manage here. Probably refactor this whole three js stuff.
-                changedSet = true;
-                doDispose(graphGroup);
+                //changedSet = true;
+                layout = null;
+                tickCounter = 0;
+
+                /**function afterGroupDispose() {
+                    renderer.render(mainScene, camera);
+                    console.log('after disposal render');
+                }**/
+
+                /**
+                    doDispose(nodeSphereGroup);
+
+                console.log('nodespheregrouplength');
+                console.log(nodeSphereGroup.children.length);
+                for (let i = 0; i < lineGroup.children.length; i++) {
+                    doDispose(lineGroup.children[i]);
+                }
+                for (let i = 0; i < textGroup.children.length; i++) {
+                    doDispose(textGroup.children[i]);
+                }
+
+                console.log('after dispose graphgruop');
+                console.log(graphGroup);
+                console.log(graphGroup.children.length);
+                for(let i = 0; i < graphGroup.children.length; i++) {
+                    console.log("Still have: " + graphGroup.children[i].name + " " + + graphGroup.children[i].children.length);
+                    for(let j = 0; j < graphGroup.children[i].children.length; j++) {
+                        console.log(graphGroup.children[i].children[j]);
+                    }
+                }**/
+
+
+                console.log('mapped data stuff');
+                if(mappedData) {
+                    mappedData.nodes.forEach(node => {
+
+                        if(node.mesh) {
+                            doDispose(node.mesh);
+                        }
+
+                        console.log(JSON.stringify(node));
+                        if(node.displayText) {
+                            doDispose(node.displayText);
+                        }
+
+                        console.log(node);
+                    });
+
+                    doDispose(nodeSphereGroup);
+                    mappedData = null;
+
+                }
+
+                renderer.render(mainScene, camera);
+
+
             },
             setFrameId: function(frameId) {
                 _frameId = frameId;
