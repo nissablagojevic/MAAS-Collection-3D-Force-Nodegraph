@@ -80,7 +80,8 @@ export const GraphCanvas = (function() {
                 }
             }
         }
-
+        const parent = obj.parent;
+        parent.remove(obj);
         console.log('setting obj as undefined');
         obj = undefined;
     }
@@ -122,13 +123,16 @@ export const GraphCanvas = (function() {
         //update our raycaster's position with the mouse position coordinates and camera info
         raycaster.setFromCamera(mousePos, camera);
         //check if our raycasted click event collides with a nodesphere
-        const intersects = raycaster.intersectObjects(graphGroup.getObjectByProperty('name', 'nodeSphereGroup').children)
-            .filter(o => o.object.__data); // Check only objects with data (nodes)
+        const nodes = graphGroup.getObjectByProperty('name', 'nodeSphereGroup');
+        if(nodes && nodes.children.length) {
+            const intersects = raycaster.intersectObjects(nodes.children)
+                .filter(o => o.object.__data); // Check only objects with data (nodes)
 
-        //if our click collided with a node
-        if (intersects.length) {
-            //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-            selectedNode = intersects[0].object.__data;
+            //if our click collided with a node
+            if (intersects.length) {
+                //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
+                selectedNode = intersects[0].object.__data;
+            }
         }
     }
 
@@ -211,7 +215,7 @@ export const GraphCanvas = (function() {
                         if(!node.mainImage) {
                             node.mainImage = './error.jpg';
                         }
-                        addSphere(node, nodeSphereGroup, true);
+                        addSphere(node, nodeSphereGroup, false);
                     }
 
                     if(node.type === 'narrative') {
@@ -238,12 +242,10 @@ export const GraphCanvas = (function() {
                 graphGroup.add(textGroup);
                 graphGroup.add(spriteGroup);
 
-                console.log(graphGroup);
-
+                /**
                 if(!document.getElementsByClassName('dg').length) {
                     addGUI(mainScene, lineGroup, nodeSphereGroup);
-
-                }
+                }**/
             },
             animate3d: function() {
                 if (camera.position.x === 0 && camera.position.y === 0) {
@@ -272,6 +274,8 @@ export const GraphCanvas = (function() {
                 //if we haven't already generated our 3d objects
                 if(nodeSphereGroup.children.length === 0 || changedSet) {
                     console.log('changed set');
+
+                    //todo: check we have disposed of all our stuff
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
                     if (!fetchingJson && mappedData !== null) {
@@ -365,39 +369,10 @@ export const GraphCanvas = (function() {
                 console.log('remove 3d stuf');
 
                 //need a proper way to dispose and memory manage here. Probably refactor this whole three js stuff.
-                //changedSet = true;
+                changedSet = true;
                 layout = null;
                 tickCounter = 0;
 
-                /**function afterGroupDispose() {
-                    renderer.render(mainScene, camera);
-                    console.log('after disposal render');
-                }**/
-
-                /**
-                    doDispose(nodeSphereGroup);
-
-                console.log('nodespheregrouplength');
-                console.log(nodeSphereGroup.children.length);
-                for (let i = 0; i < lineGroup.children.length; i++) {
-                    doDispose(lineGroup.children[i]);
-                }
-                for (let i = 0; i < textGroup.children.length; i++) {
-                    doDispose(textGroup.children[i]);
-                }
-
-                console.log('after dispose graphgruop');
-                console.log(graphGroup);
-                console.log(graphGroup.children.length);
-                for(let i = 0; i < graphGroup.children.length; i++) {
-                    console.log("Still have: " + graphGroup.children[i].name + " " + + graphGroup.children[i].children.length);
-                    for(let j = 0; j < graphGroup.children[i].children.length; j++) {
-                        console.log(graphGroup.children[i].children[j]);
-                    }
-                }**/
-
-
-                console.log('mapped data stuff');
                 if(mappedData) {
                     mappedData.nodes.forEach(node => {
 
@@ -405,7 +380,6 @@ export const GraphCanvas = (function() {
                             doDispose(node.mesh);
                         }
 
-                        console.log(JSON.stringify(node));
                         if(node.displayText) {
                             doDispose(node.displayText);
                         }
@@ -413,14 +387,18 @@ export const GraphCanvas = (function() {
                         console.log(node);
                     });
 
-                    doDispose(nodeSphereGroup);
-                    mappedData = null;
+                    mappedData.links.forEach(link => {
+                        if(link.__line) {
+                            doDispose(link.__line);
+                        }
+                        console.log(link);
+                    });
 
+                    //doDispose(nodeSphereGroup);
+                    mappedData = null;
                 }
 
                 renderer.render(mainScene, camera);
-
-
             },
             setFrameId: function(frameId) {
                 _frameId = frameId;

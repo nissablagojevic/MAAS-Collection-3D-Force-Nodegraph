@@ -8,25 +8,37 @@ export const defaultGeometry = new THREE.SphereBufferGeometry(Math.cbrt(1) * nod
 
 
 
-export default function addSphere(node, graphGroup, addData = false) {
+export default function addSphere(node, graphGroup, addData = false, addImage = true) {
+    let material;
 
-    const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
+    if(addImage) {
+        const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
 
-    // main memory bottleneck
-    const image = imageLoader.load( node.mainImage );
-    const texture = new THREE.CanvasTexture( image );
+        // main memory bottleneck
+        const image = imageLoader.load( node.mainImage );
+        const texture = new THREE.CanvasTexture( image );
 
-    //prevent three.js complaining about images not being 2^n width and height
-    texture.minFilter = THREE.LinearFilter;
-    texture.mapping = THREE.SphericalReflectionMapping;
-    const material = new THREE.MeshPhongMaterial(
-        { color: 0xffffff,
-            transparent: true,
-            opacity: 1,
-            envMap: texture,
-            reflectivity: 1,
-            shininess: 100
-        } );
+        //prevent three.js complaining about images not being 2^n width and height
+        texture.minFilter = THREE.LinearFilter;
+        texture.mapping = THREE.SphericalReflectionMapping;
+        material = new THREE.MeshPhongMaterial(
+            { color: 0xffffff,
+                transparent: true,
+                opacity: 1,
+                envMap: texture,
+                reflectivity: 1,
+                shininess: 100
+            } );
+    } else {
+        material = new THREE.MeshPhongMaterial(
+            { color: 0xffffff,
+                transparent: true,
+                opacity: 1,
+                reflectivity: 1,
+                shininess: 100
+            } );
+    }
+
 
 
     let sphereGeometry;
@@ -46,7 +58,7 @@ export default function addSphere(node, graphGroup, addData = false) {
 
     sphere.name = node.name; // Add label
     if (addData) {
-        sphere.__data = node; // Attach node data
+        sphere.__data = node.id; // Attach node data
     }
     graphGroup.add(node.mesh = sphere);
 

@@ -69,7 +69,6 @@ class NodeGraph extends Component {
         console.log("COMPONENT DID UPDATE");
 
         if (prevProps !== this.props) {
-            //this.graphCanvas.remove3dStuff();
             this.graphCanvas.setFetchingJson(true);
 
             qwest.get(sourceUrl + sourceQuery(this.state.narrative)).then((xhr, response) => {
@@ -109,7 +108,7 @@ class NodeGraph extends Component {
 
     componentWillUnmount() {
         this.graphCanvas.stopLoop();
-        this.graphCanvas.remove3dStuff();
+        //this.graphCanvas.remove3dStuff();
     }
 
     handleClick(e) {
@@ -157,7 +156,9 @@ class NodeGraph extends Component {
 
     selectNarrative(event) {
         let narrative = parseInt(event.target.value, 10);
-        console.log(this.props);
+
+        this.graphCanvas.stopLoop();
+        this.graphCanvas.remove3dStuff();
 
         const location = {
             pathname: `/${narrative}`,
@@ -182,7 +183,7 @@ class NodeGraph extends Component {
                     Tap &amp; Drag to orbit. Pinch to zoom.
                     Tap on a sphere to select that object.
                 </div>
-                <button id="removebutton" onClick={this.graphCanvas.remove3dStuff()}>Remove Stuff</button>
+            {/**<button id="removebutton" onClick={this.graphCanvas.remove3dStuff()}>Remove Stuff</button>**/}
             {this.renderInfo(this.state.selectedNode)}
             </div>
         );
