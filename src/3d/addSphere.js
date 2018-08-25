@@ -1,21 +1,35 @@
 import * as THREE from 'three';
 
+import { ImageLoader, sunTexture, errorImage } from './loaders.js';
+
 export const nodeResolution = 20;
 export const nodeMaterials = {};
 export const nodeRelSize = 10;
 export const nodeGeometries = {};
 export const defaultGeometry = new THREE.SphereBufferGeometry(Math.cbrt(1) * nodeRelSize, nodeResolution, nodeResolution);
 
-
-
 export default function addSphere(node, graphGroup, addData = false, addImage = true) {
     let material;
 
     if(addImage) {
-        const imageLoader = new THREE.ImageLoader().setCrossOrigin( '*' );
 
-        // main memory bottleneck
-        const image = imageLoader.load( node.mainImage );
+        if(!node.mainImage) {
+            node.mainImage = 'error.jpg';
+        }
+
+        let image;
+
+        switch (node.mainImage) {
+            case 'error.jpg':
+                image = errorImage;
+                break;
+            case 'suntex.jpg':
+                image = sunTexture;
+                break;
+            default:
+                image = ImageLoader.load( node.mainImage );
+        }
+
         const texture = new THREE.CanvasTexture( image );
 
         //prevent three.js complaining about images not being 2^n width and height
@@ -38,8 +52,6 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
                 shininess: 100
             } );
     }
-
-
 
     let sphereGeometry;
 

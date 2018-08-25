@@ -19,7 +19,7 @@ class NodeGraph extends Component {
             narrative: 2087,
         };
 
-        this.graphCanvas = GraphCanvas.getInstance();
+
         this.handleClick = this.handleClick.bind(this);
         this.renderInfo = this.renderInfo.bind(this);
         this.renderNarrativeSelect = this.renderNarrativeSelect.bind(this);
@@ -28,8 +28,13 @@ class NodeGraph extends Component {
     }
 
     componentDidMount() {
+
+        this.graphCanvas = GraphCanvas.getInstance();
         //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
         this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
+
+        console.log(this.graphCanvas);
+
         this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export default function addText(node, graphGroup, textMaterials = null) {
+export default function addText(node, graphGroup, font, textMaterials = null) {
     if (!textMaterials) {
         textMaterials = [
             new THREE.MeshBasicMaterial({
@@ -10,28 +10,17 @@ export default function addText(node, graphGroup, textMaterials = null) {
         ];
     }
 
-    const fontLoader = new THREE.FontLoader();
-
-    //yeah, need to properly bundle this.
-    fontLoader.load( 'lineto-circular.json',
-        function ( font ) {
-            const geometry = new THREE.TextGeometry( node.name, {
+     const geometry = new THREE.TextGeometry( node.name, {
                 font: font,
                 size: 5,
                 height: 5,
                 curveSegments: 5
             });
 
-            geometry.computeBoundingBox();
-            const textMesh = new THREE.Mesh( geometry, textMaterials );
-            textMesh.__data = node;
-            graphGroup.add(node.displayText = textMesh);
-        },
-        function (xhr) {
-            //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-        },
-        function(err) {
-            console.log( 'An error happened loading the font' );
-            console.log(err);
-        });
+
+     geometry.computeBoundingBox();
+     const textMesh = new THREE.Mesh( geometry, textMaterials );
+     textMesh.__data = node;
+     graphGroup.add(node.displayText = textMesh);
+
 }

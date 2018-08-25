@@ -1,13 +1,14 @@
 import * as THREE from 'three';
-import { addLine, addSphere, addText, addEnv, addGUI } from '../3d';
+import { addLine, addSphere, addText, addEnv, addGUI, font} from '../3d';
 import { GraphLayout } from '../forceLayout';
 
 //leap controls
 import {initLeapControls, swipe} from "../leap";
 
-export const GraphCanvas = (function() {
-    let instance;
 
+export const GraphCanvas = (function() {
+    console.log('GraphCanvas');
+    let instance;
 
     //d3 graph calculation stuff
     const graphLayout = GraphLayout.getInstance();
@@ -17,7 +18,6 @@ export const GraphCanvas = (function() {
     //stop layout from drifting forever. need to implement dynamic based on whole graph width
     const MAXTICKS = 400;
     let tickCounter = 0;
-
 
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -150,7 +150,7 @@ export const GraphCanvas = (function() {
     //the mainscene is there to hold our 3d graph but also lights and viewfog or other globally stuff
     const mainScene = new THREE.Scene();
 
-    addEnv(mainScene);
+
 
     // Capture mouse coords on move
     const raycaster = new THREE.Raycaster();
@@ -176,8 +176,6 @@ export const GraphCanvas = (function() {
 
     mainScene.add(graphGroup);
 
-    const errorImage = new THREE.ImageLoader().setCrossOrigin( '*' );
-
     initLeapControls();
     const swiper = window.controller.gesture('swipe');
 
@@ -195,31 +193,20 @@ export const GraphCanvas = (function() {
         let mappedData = null;
 
 
-        errorImage.load('error.jpg',
-            (image) => {
-                return image;
-            },
-            undefined,
-            (e) => {
-                console.log('error image failed to load');
-            });
-
         return {
             add3dStuff: function() {
+                addEnv(mainScene);
                 this.initThreeControls();
                 //map the newly created nodes to spheres
                 console.log("ADD 3d STUFF");
                 console.log(mappedData);
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
-                        if(!node.mainImage) {
-                            node.mainImage = './error.jpg';
-                        }
                         addSphere(node, nodeSphereGroup, false);
                     }
 
                     if(node.type === 'narrative') {
-                        node.mainImage = './suntex.jpg';
+                        node.mainImage = 'suntex.jpg';
                         node.size = 20;
 
                         addSphere(node, nodeSphereGroup, true);
@@ -227,7 +214,7 @@ export const GraphCanvas = (function() {
                     }
 
                     if(node.type === 'term') {
-                        addText(node, textGroup);
+                        addText(node, textGroup, font);
                     }
 
                 });
@@ -429,10 +416,11 @@ export const GraphCanvas = (function() {
 
     return {
         getInstance: function () {
+            console.log('attempting to get 3d instance');
             if ( !instance ) {
                 instance = init();
+                return instance;
             }
-            return instance;
         }
     }
 })();

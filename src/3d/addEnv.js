@@ -1,11 +1,9 @@
 import * as THREE from 'three';
 
+import { CubeTextureLoader, cubeTexture } from './loaders.js';
+
 export default function addEnv(scene, ambientLight = null, directLight = null, skyBoxTexture = null, viewFog = null) {
     //fiat lux
-
-    let urls;
-
-
     var light = new THREE.PointLight( 0xFFA500, 1, 2500 );
     light.position.set( 0, 0, 0 );
     scene.add( light );
@@ -18,26 +16,22 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
         //directLight = new THREE.DirectionalLight(0xffffff, 0.6);
     }
 
+    let textureCube;
     if(!skyBoxTexture) {
-        // Textures
-        const r = "./";
-        urls = [ r + "bluecloud.jpg", r + "bluecloud.jpg",
-            r + "bluecloud.jpg", r + "bluecloud.jpg",
-            r + "bluecloud.jpg", r + "bluecloud.jpg" ];
+        textureCube = cubeTexture;
+    } else {
+        //texture must be width = height and ideally width = 2^n
+        textureCube = CubeTextureLoader.load( skyBoxTexture );
     }
+
+    textureCube.format = THREE.RGBFormat;
+    textureCube.mapping = THREE.CubeReflectionMapping;
 
     if(!viewFog) {
         viewFog = new THREE.Fog(0xfff189, 1, 10000);
     }
 
     scene.fog = viewFog;
-
-    //pos x, neg x, pos y, neg y, pos z, neg z
-
-    //texture must be width = height and ideally width = 2^n
-    const textureCube = new THREE.CubeTextureLoader().load( urls );
-    textureCube.format = THREE.RGBFormat;
-    textureCube.mapping = THREE.CubeReflectionMapping;
 
     var cubeShader = THREE.ShaderLib[ "cube" ];
 
