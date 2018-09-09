@@ -13,7 +13,7 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
     }
 
     if(!directLight) {
-        //directLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        directLight = new THREE.DirectionalLight(0xffffff, 0.6);
     }
 
     let textureCube;
@@ -46,8 +46,7 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
     // Skybox
     const cubeMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 25000, 25000, 25000 ), cubeMaterial );
     cubeMesh.name = "skybox";
-    scene
-        .add( cubeMesh )
-        .add( ambientLight )
-        .add( directLight );
+    scene.add( cubeMesh );
+    scene.add( ambientLight );
+    scene.add( directLight );
 }

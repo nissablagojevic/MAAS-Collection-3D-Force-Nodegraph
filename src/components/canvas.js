@@ -120,18 +120,35 @@ export const GraphCanvas = (function() {
     }
 
     function handleClick() {
+        console.log('handleClick');
         //update our raycaster's position with the mouse position coordinates and camera info
         raycaster.setFromCamera(mousePos, camera);
         //check if our raycasted click event collides with a nodesphere
         const nodes = graphGroup.getObjectByProperty('name', 'nodeSphereGroup');
-        if(nodes && nodes.children.length) {
-            const intersects = raycaster.intersectObjects(nodes.children)
-                .filter(o => o.object.__data); // Check only objects with data (nodes)
+        const textNodes = graphGroup.getObjectByProperty('name', 'textGroup');
+        if(nodes && nodes.children.length || textNodes && textNodes.children.length) {
+            let intersects = raycaster.intersectObjects(nodes.children)
+                .filter((o) => {
+                    console.log(o);
+                    if (o.object.visible) {
+                        return o.object;
+                    }
+                });
+
+            if (!intersects.length) {
+                intersects = raycaster.intersectObjects(textNodes.children)
+                    .filter((o) => {
+                        console.log(o);
+                        if (o.object.visible) {
+                            return o.object;
+                        }
+                    });
+            }
 
             //if our click collided with a node
             if (intersects.length) {
-                //tell react about that because later we'll want to load info about the node (VERSION 2 ANYONE??)
-                selectedNode = intersects[0].object.__data;
+                console.log("intersects has length")
+                selectedNode = intersects[0].object;
             }
         }
     }
@@ -200,9 +217,10 @@ export const GraphCanvas = (function() {
                 //map the newly created nodes to spheres
                 console.log("ADD 3d STUFF");
                 console.log(mappedData);
+
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
-                        addSphere(node, nodeSphereGroup, false);
+                        addSphere(node, nodeSphereGroup, false, true, camera.position);
                     }
 
                     if(node.type === 'narrative') {
@@ -248,6 +266,8 @@ export const GraphCanvas = (function() {
                 raycaster.setFromCamera(mousePos, camera);
                 //this.tbControls.update();
                 this.updateControls();
+
+                graphGroup.rotation.y += 0.0002;
 
                 //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
                 //the renderer needs to shove the frame to the screen

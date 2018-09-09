@@ -4,6 +4,7 @@ export const manager = new THREE.LoadingManager();
 export const CubeTextureLoader = new THREE.CubeTextureLoader(manager);
 export const FontLoader = new THREE.FontLoader(manager);
 export const ImageLoader = new THREE.ImageLoader(manager).setCrossOrigin( '*' );
+export const TextureLoader = new THREE.TextureLoader();
 
 export let errorImage = null;
 export let sunTexture = null;
@@ -27,7 +28,6 @@ manager.onLoad = function ( ) {
 
 };
 
-
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 
     console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
@@ -50,6 +50,18 @@ ImageLoader.load('suntex.jpg',
     (image) => {
         sunTexture = image;
     });
+
+
+
+
+
+
+/**
+TextureLoader.load('glow.png',
+    (image) => {
+        glowTexture = image;
+    });**/
+
 // Textures
 //pos x, neg x, pos y, neg y, pos z, neg z
 //@TODO: replace with seamless cube textures
