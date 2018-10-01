@@ -252,22 +252,32 @@ export const GraphCanvas = (function() {
                     addGUI(mainScene, lineGroup, nodeSphereGroup);
                 }**/
             },
-            animate3d: function() {
+            updateCamera: function() {
                 if (camera.position.x === 0 && camera.position.y === 0) {
                     // If camera still in default position (not user modified)
                     camera.lookAt(graphGroup.position);
                 }
+
+
+                raycaster.setFromCamera(mousePos, camera);
+                //this.tbControls.update();
+                this.updateControls();
+
+
                 if(textGroup && textGroup.children) {
                     for (let i = 0; i < textGroup.children.length; i++) {
                         textGroup.children[i].lookAt(camera.position);
                     }
                 }
 
-                raycaster.setFromCamera(mousePos, camera);
-                //this.tbControls.update();
-                this.updateControls();
-
-                graphGroup.rotation.y += 0.0002;
+                if (nodeSphereGroup && nodeSphereGroup.children) {
+                    for (let i = 0; i < nodeSphereGroup.children.length; i++) {
+                        //TODO: This should be done in Object3D.onBeforeRender
+                        //and you need to work out the Vector or Quaternion that is the intersect of camera and node
+                        //see: https://threejs.org/docs/#api/en/materials/ShaderMaterial
+                        nodeSphereGroup.children[i].children[0].material.uniforms.viewVector.value = camera.position;
+                    }
+                }
 
                 //this is the important bit. After we've dicked with the mainScene's contents(or just its children's contents),
                 //the renderer needs to shove the frame to the screen
@@ -300,8 +310,11 @@ export const GraphCanvas = (function() {
                     }
 
                 } else {
-                        instance.animate3d();
-                        instance.update3dStuff();
+                        graphGroup.rotation.y += 0.0002;
+
+                        instance.updateCamera();
+                        instance.updateLinksPos();
+                        instance.updateNodesPos();
 
                         if(layout && layout.graph && tickCounter < MAXTICKS) {
                             const layoutTick = layout[isD3Sim?'tick':'step']();
@@ -348,21 +361,20 @@ export const GraphCanvas = (function() {
                     controls.update();
                 }
             },
-            update3dStuff: function() {
+            updateLinksPos: function() {
+                if(mappedData && mappedData.links && mappedData.links.length > 0) {
+                    // Update links position
+                    mappedData.links.forEach(link => {
+                        graphLayout.updateLinkPos(link);
+                    });
+                }
+            },
+            updateNodesPos: function() {
                 // Update nodes position
-                if(mappedData) {
-                    if(mappedData.nodes && mappedData.nodes.length > 0) {
-                        mappedData.nodes.forEach(node => {
-                            graphLayout.updateNodePos(node);
-                        });
-                    }
-
-                    if(mappedData.links && mappedData.links.length > 0) {
-                        // Update links position
-                        mappedData.links.forEach(link => {
-                            graphLayout.updateLinkPos(link);
-                        });
-                    }
+                if(mappedData && mappedData.nodes && mappedData.nodes.length > 0) {
+                    mappedData.nodes.forEach(node => {
+                        graphLayout.updateNodePos(node);
+                    });
                 }
             },
             resizeCanvas: function(width, height) {
@@ -373,9 +385,7 @@ export const GraphCanvas = (function() {
                 }
             },
             remove3dStuff: function(obj = null) {
-                console.log('remove 3d stuf');
-
-                //need a proper way to dispose and memory manage here. Probably refactor this whole three js stuff.
+                //TODO: need a proper way to dispose and memory manage here.
                 changedSet = true;
                 layout = null;
                 tickCounter = 0;
@@ -421,12 +431,6 @@ export const GraphCanvas = (function() {
             },
             setFetchingJson: function(fJ) {
                 fetchingJson = fJ;
-            },
-            getChangedSet: function() {
-                return changedSet;
-            },
-            setChangedSet: function(cS) {
-                changedSet = cS
             },
             selectNode: function() {
                 return selectedNode;

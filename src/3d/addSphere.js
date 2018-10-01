@@ -8,7 +8,7 @@ export const nodeRelSize = 10;
 export const nodeGeometries = {};
 export const defaultGeometry = new THREE.SphereBufferGeometry(Math.cbrt(1) * nodeRelSize, nodeResolution, nodeResolution);
 
-export default function addSphere(node, graphGroup, addData = false, addImage = true, cameraPosition) {
+export default function addSphere(node, graphGroup, addData = false, addImage = true) {
     let material;
     let glowColour;
 
@@ -31,7 +31,7 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
                 break;
             default:
                 image = ImageLoader.load( node.mainImage );
-                glowColour = 0xafdbff;
+                glowColour = 0x54b1ff;
         }
 
         const texture = new THREE.CanvasTexture( image );
@@ -59,19 +59,6 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
 
     let sphereGeometry;
 
-    // SUPER SIMPLE GLOW EFFECT
-    // use sprite because it appears the same from all angles
-    /**var spriteMaterial = new THREE.SpriteMaterial(
-        {
-            map: glowTexture,
-            //useScreenCoordinates: false, alignment: THREE.SpriteAlignment.center,
-            color: glowColour, transparent: false, blending: THREE.AdditiveBlending
-        });
-
-    var sprite = new THREE.Sprite(spriteMaterial);**/
-
-
-
     if (node.hasOwnProperty('size')) {
         //currently only the central node has its own size.
         //Need to find a good place to separate configurations for special nodes.
@@ -84,25 +71,22 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
         //material.emissive = new THREE.Color(0x89D4FF);
     }
 
-
-
     const sphere = new THREE.Mesh(sphereGeometry, material);
 
     // create custom material from the shader code above
-//   that is within specially labeled script tags
+    // that is within specially labeled script tags
+    // credit: http://stemkoski.github.io/Three.js/Shader-Glow.html
     var glowMaterial = new THREE.ShaderMaterial(
         {
             uniforms:
             {
-                "c":   { type: "f", value: 0.2 },
-                "p":   { type: "f", value: 2 },
+                "c":   { type: "f", value: 0.1 },
+                "p":   { type: "f", value: 5 },
                 glowColor: { type: "c", value: new THREE.Color(glowColour) },
-                viewVector: { type: "v3", value: cameraPosition }
+                viewVector: { type: "v3", value: {x: 1, y: 1, z: 1} }
             },
-            //todo: implement shader code from below
-            //http://stemkoski.github.io/Three.js/Shader-Glow.html
-            //vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-            //fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+            vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
             side: THREE.BackSide,
             blending: THREE.AdditiveBlending,
             transparent: true
@@ -110,7 +94,7 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
 
     let glow = new THREE.Mesh( sphereGeometry.clone(), glowMaterial );
     sphere.add(glow);
-    glow.scale.multiplyScalar(1.1);
+    glow.scale.multiplyScalar(1.5);
 
     sphere.name = node.name; // Add label
     if (addData) {

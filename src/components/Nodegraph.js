@@ -188,7 +188,6 @@ class NodeGraph extends Component {
                     Tap &amp; Drag to orbit. Pinch to zoom.
                     Tap on a sphere to select that object.
                 </div>
-            {/**<button id="removebutton" onClick={this.graphCanvas.remove3dStuff()}>Remove Stuff</button>**/}
             {this.renderInfo(this.state.selectedNode)}
             </div>
         );

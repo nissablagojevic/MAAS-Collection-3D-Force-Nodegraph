@@ -51,17 +51,6 @@ ImageLoader.load('suntex.jpg',
         sunTexture = image;
     });
 
-
-
-
-
-
-/**
-TextureLoader.load('glow.png',
-    (image) => {
-        glowTexture = image;
-    });**/
-
 // Textures
 //pos x, neg x, pos y, neg y, pos z, neg z
 //@TODO: replace with seamless cube textures
