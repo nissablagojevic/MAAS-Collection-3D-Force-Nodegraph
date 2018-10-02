@@ -5,6 +5,9 @@ import {sourceUrl, sourceQuery, nodeQuery, mapData, narrativesList} from './reso
 import './Nodegraph.css';
 
 import NodeInfoWindow from './NodeInfoWindow';
+import Selector from './Selector';
+import SelectNarrative from './SelectNarrative';
+import Instructions from './Instructions';
 
 //3d stuff
 import {GraphCanvas} from './canvas.js';
@@ -21,11 +24,8 @@ class NodeGraph extends Component {
             narrative: 2087
         };
 
-
         this.handleClick = this.handleClick.bind(this);
-        this.renderNarrativeSelect = this.renderNarrativeSelect.bind(this);
-        this.selectNarrative = this.selectNarrative.bind(this);
-
+        this.getNarrative = this.getNarrative.bind(this);
     }
 
     componentDidMount() {
@@ -34,41 +34,13 @@ class NodeGraph extends Component {
         //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
         this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight});
 
-        console.log(this.graphCanvas);
-
         this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
 
         //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
         //has updated the component with the proper width and height, and there's fallback values
         this.mount.appendChild(this.graphCanvas.getRenderer().domElement);
 
-        let urlNarrative;
-
-        if(this.props.match.params.id) {
-            urlNarrative = parseInt(this.props.match.params.id, 10);
-        } else {
-            urlNarrative = this.state.narrative;
-        }
-
-        //fetch narrative data from API after initialisation
-        qwest.get(sourceUrl + sourceQuery(urlNarrative)).then((xhr, response) => {
-            console.log('qwest get');
-            this.setState({responseData: response.data, narrative: urlNarrative});
-
-        }).catch(function(e, xhr, response) {
-            // Process the error in getting the json file
-            console.log('DATA RETRIEVAL ERROR');
-            console.log(e);
-        });
-
-        //fetch list of narratives from API
-        qwest.get(sourceUrl + narrativesList).then((xhr, response) => {
-            this.setState({narrativesList: response.data.narratives});
-        }).catch(function(e, xhr, response) {
-            // Process the error in getting the json file
-            console.log('DATA RETRIEVAL ERROR');
-            console.log(e);
-        });
+        this.getNarrative();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -76,17 +48,8 @@ class NodeGraph extends Component {
 
         if (prevProps !== this.props) {
             this.graphCanvas.setFetchingJson(true);
-
-            qwest.get(sourceUrl + sourceQuery(this.state.narrative)).then((xhr, response) => {
-                console.log('qwest reget');
-                this.setState({responseData: response.data, fetchingJson: false});
-            }).catch(function (e, xhr, response) {
-                // Process the error in getting the json file
-                console.log('DATA RETRIEVAL ERROR');
-                console.log(e);
-            });
+            this.getNarrative();
         }
-
 
         if(this.state.responseData && this.state.responseData.narratives[0]._id === this.state.narrative) {
             console.log('have response data');
@@ -106,6 +69,9 @@ class NodeGraph extends Component {
                 }
             }
         } else {
+            console.log("RESPONSE IS ACTUALLY...");
+            console.log(this.state.responseData);
+            console.log(this.state.narrative);
             console.log('no response data');
             this.graphCanvas.setFetchingJson(true);
         }
@@ -114,43 +80,30 @@ class NodeGraph extends Component {
 
     componentWillUnmount() {
         this.graphCanvas.stopLoop();
-        //this.graphCanvas.remove3dStuff();
+        this.graphCanvas.remove3dStuff();
+    }
+
+    getNarrative() {
+        let urlNarrative;
+        //this is bound to be a problem
+        if(this.props.location && this.props.location.pathname) {
+            urlNarrative = parseInt(this.props.location.pathname.substring(1), 10);
+        }
+
+        qwest.get(sourceUrl + sourceQuery(urlNarrative)).then((xhr, response) => {
+            console.log('qwest reget');
+            this.graphCanvas.stopLoop();
+            this.graphCanvas.remove3dStuff();
+            this.setState({narrative: urlNarrative, responseData: response.data, fetchingJson: false});
+        }).catch(function (e, xhr, response) {
+            // Process the error in getting the json file
+            console.log('DATA RETRIEVAL ERROR');
+            console.log(e);
+        });
     }
 
     handleClick(e) {
         this.setState({selectedNode: this.graphCanvas.selectNode()});
-    }
-
-    renderNarrativeSelect() {
-        const narratives = this.state.narrativesList;
-
-        if(narratives) {
-            const options = [];
-
-            narratives.forEach((narrative) => {
-                options.push(<option key={narrative._id} value={narrative._id}>{narrative.title}</option>);
-            });
-
-            return(
-                <select value={this.state.narrative} onChange={this.selectNarrative}>
-                {options}
-                </select>
-            );
-        }
-    }
-
-    selectNarrative(event) {
-        let narrative = parseInt(event.target.value, 10);
-
-        this.graphCanvas.stopLoop();
-        this.graphCanvas.remove3dStuff();
-
-        const location = {
-            pathname: `/${narrative}`,
-        };
-
-        this.setState({narrative: narrative});
-        this.props.history.push(location);
     }
 
     render() {
@@ -159,15 +112,7 @@ class NodeGraph extends Component {
                 id="nodegraph"
                 ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
                 onClick={() => this.handleClick()}>
-                <div className="instructions">
-                    <div className="narrativeSelect">
-                        Selected Narrative:
-                        {this.renderNarrativeSelect()}
-                    </div>
-                    Camera controls:
-                    Tap &amp; Drag to orbit. Pinch to zoom.
-                    Tap on a sphere to select that object.
-                </div>
+                <Instructions/>
                 <NodeInfoWindow node={this.state.selectedNode}/>
             </div>
         );

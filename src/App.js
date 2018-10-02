@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import { Navigation, About, Nodegraph } from './components';
+import { Navigation, About, Nodegraph, SelectNarrative } from './components';
 
 import Helmet from 'react-helmet';
 
@@ -13,6 +13,10 @@ class App extends Component {
         super();
         this.state = {
         }
+    }
+
+    componentDidUpdate(prevProps) {
+        console.log("APP UPDATED");
     }
 
     handleErrors(response) {
@@ -57,8 +61,9 @@ class App extends Component {
                     <div>
                         <Navigation/>
                         <div>
-                            <Route path={'/:id'} component={Nodegraph} />
-                            <Route path={'about'} component={About} />
+                            <Route path="/" component={SelectNarrative}/>
+                            <Route exact path="/about" component={About}/>
+                            <Route exact path="/:id" component={Nodegraph} />
                         </div>
                     </div>
                 </Router>

@@ -19,6 +19,8 @@ export function nodeQuery(type, id) {
     //danger. Uses very poor plurilisation assumption
     //object => objects
     //narrative => narratives etc.
+    //also only works on objects currently due to erroring out on non-existing properties
+    //@TODO: actually map different node types to a schema so this is way less specific to objects
     return `{${type}s(filter:{_id:${id}}) {
     _id
       title

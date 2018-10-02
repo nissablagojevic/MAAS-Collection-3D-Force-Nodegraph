@@ -7,7 +7,6 @@ import {initLeapControls, swipe} from "../leap";
 
 
 export const GraphCanvas = (function() {
-    console.log('GraphCanvas');
     let instance;
 
     //d3 graph calculation stuff
