@@ -15,13 +15,12 @@ export const narrativesList = `{
 //_id:69 = ceramic highlights
 //_id:743 = anatomical and botanical models - tight clusters
 
-export function sourceQuery(narrativeId) {
-    const graphQLQuery = `{narratives(filter:{_id:${narrativeId}}){
+export function nodeQuery(type, id) {
+    //danger. Uses very poor plurilisation assumption
+    //object => objects
+    //narrative => narratives etc.
+    return `{${type}s(filter:{_id:${id}}) {
     _id
-    title
-    description
-    objects(limit: 200) {
-      _id
       title
       displayTitle
       description
@@ -38,11 +37,28 @@ export function sourceQuery(narrativeId) {
       images(limit: 1) {
         url(width: 320, height: 320)
       }
+  }}`;
+}
+
+export function sourceQuery(narrativeId) {
+    return  `{narratives(filter:{_id:${narrativeId}}){
+    _id
+    title
+    description
+    objects(limit: 200) {
+      _id
+      category
+      terms {
+        id
+        term
+      }
+      images(limit: 1) {
+        url(width: 320, height: 320)
+      }
     }
   }
 }`;
 
-    return graphQLQuery;
 }
 
 /*

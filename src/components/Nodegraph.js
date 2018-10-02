@@ -1,8 +1,10 @@
 import { default as React, Component } from 'react';
 import qwest from 'qwest';
-import {sourceUrl, sourceQuery, mapData, narrativesList} from './resolvers.js';
+import {sourceUrl, sourceQuery, nodeQuery, mapData, narrativesList} from './resolvers.js';
 
 import './Nodegraph.css';
+
+import NodeInfoWindow from './NodeInfoWindow';
 
 //3d stuff
 import {GraphCanvas} from './canvas.js';
@@ -16,12 +18,11 @@ class NodeGraph extends Component {
             fetchingJson: false,
             responseData: null,
             selectedNode: null,
-            narrative: 2087,
+            narrative: 2087
         };
 
 
         this.handleClick = this.handleClick.bind(this);
-        this.renderInfo = this.renderInfo.bind(this);
         this.renderNarrativeSelect = this.renderNarrativeSelect.bind(this);
         this.selectNarrative = this.selectNarrative.bind(this);
 
@@ -120,27 +121,6 @@ class NodeGraph extends Component {
         this.setState({selectedNode: this.graphCanvas.selectNode()});
     }
 
-    renderInfo() {
-        let info = '';
-        if(this.state.selectedNode) {
-            console.log(this.state.selectedNode);
-
-            const {id, name, type, mainImage, description, date} = this.state.selectedNode;
-
-            info = <div>
-                <dt>Name: </dt>
-                <dd>{name}</dd>
-                <dt>Date: </dt>
-                <dd>{date}</dd>
-                <dt>Description: </dt>
-                <dd>{description}</dd>
-                {type !== 'narrative' && <span><dt>Thumbnail: </dt><dd><img src={mainImage}/></dd></span>}
-            </div>;
-        }
-
-        return (<div className="info">{info}</div>);
-    }
-
     renderNarrativeSelect() {
         const narratives = this.state.narrativesList;
 
@@ -188,7 +168,7 @@ class NodeGraph extends Component {
                     Tap &amp; Drag to orbit. Pinch to zoom.
                     Tap on a sphere to select that object.
                 </div>
-            {this.renderInfo(this.state.selectedNode)}
+                <NodeInfoWindow node={this.state.selectedNode}/>
             </div>
         );
     }

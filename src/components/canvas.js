@@ -147,8 +147,8 @@ export const GraphCanvas = (function() {
 
             //if our click collided with a node
             if (intersects.length) {
-                console.log("intersects has length")
-                selectedNode = intersects[0].object;
+                console.log("intersects has length");
+                selectedNode = intersects[0].object.__data;
             }
         }
     }
@@ -220,14 +220,14 @@ export const GraphCanvas = (function() {
 
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
-                        addSphere(node, nodeSphereGroup, false, true, camera.position);
+                        addSphere(node, nodeSphereGroup, true, camera.position);
                     }
 
                     if(node.type === 'narrative') {
                         node.mainImage = 'suntex.jpg';
                         node.size = 20;
 
-                        addSphere(node, nodeSphereGroup, true);
+                        addSphere(node, nodeSphereGroup);
                         //addText(node, textGroup);
                     }
 
@@ -266,7 +266,20 @@ export const GraphCanvas = (function() {
 
                 if(textGroup && textGroup.children) {
                     for (let i = 0; i < textGroup.children.length; i++) {
-                        textGroup.children[i].lookAt(camera.position);
+                        //@TODO have text children all look at camera. Figure out maths.
+                        /**console.log('textgroup');
+                        console.log(camera.position);
+                        console.log(textGroup.children[i].position);
+
+                        let textCameraVector3 = {
+                            x: (textGroup.children[i].position.x - camera.position.x),
+                            y: (textGroup.children[i].position.y - camera.position.y),
+                            z: (textGroup.children[i].position.z - camera.position.z)
+                        };
+
+                        console.log(textCameraVector3);**/
+                        //textGroup.children[i].position = textCameraVector3;
+                        //textGroup.children[i].lookAt(camera.position);
                     }
                 }
 

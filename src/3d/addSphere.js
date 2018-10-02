@@ -8,7 +8,7 @@ export const nodeRelSize = 10;
 export const nodeGeometries = {};
 export const defaultGeometry = new THREE.SphereBufferGeometry(Math.cbrt(1) * nodeRelSize, nodeResolution, nodeResolution);
 
-export default function addSphere(node, graphGroup, addData = false, addImage = true) {
+export default function addSphere(node, graphGroup, addImage = true) {
     let material;
     let glowColour;
 
@@ -97,9 +97,8 @@ export default function addSphere(node, graphGroup, addData = false, addImage = 
     glow.scale.multiplyScalar(1.5);
 
     sphere.name = node.name; // Add label
-    if (addData) {
-        sphere.__data = node.id; // Attach node data
-    }
+    sphere.__data = node.id; // Attach node data
+
     graphGroup.add(node.mesh = sphere);
 
 }

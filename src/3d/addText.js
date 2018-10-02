@@ -20,7 +20,7 @@ export default function addText(node, graphGroup, font, textMaterials = null) {
 
      geometry.computeBoundingBox();
      const textMesh = new THREE.Mesh( geometry, textMaterials );
-     textMesh.__data = node;
+     textMesh.__data = node.id;
      graphGroup.add(node.displayText = textMesh);
 
 }

@@ -53,7 +53,7 @@ ImageLoader.load('suntex.jpg',
 
 // Textures
 //pos x, neg x, pos y, neg y, pos z, neg z
-//@TODO: replace with seamless cube textures
+//@TODO: replace with proper seamless cube textures
 const urls = [ "bluecloud.jpg", "bluecloud.jpg", "bluecloud.jpg", "bluecloud.jpg", "bluecloud.jpg", "bluecloud.jpg" ];
 CubeTextureLoader.load(urls, (images) => {
     cubeTexture = images;
