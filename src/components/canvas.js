@@ -3,7 +3,7 @@ import { addLine, addSphere, addText, addEnv, addGUI, font} from '../3d';
 import { GraphLayout } from '../forceLayout';
 
 //leap controls
-import {initLeapControls, swipe} from "../leap";
+//import {initLeapControls, swipe} from "../leap";
 
 
 export const GraphCanvas = (function() {
@@ -29,8 +29,6 @@ export const GraphCanvas = (function() {
     let selectedNode = null;
 
     function removeMeshTextures(material) {
-        console.log(material);
-
         if (material.map) {
             material.map.dispose ();
         }
@@ -49,12 +47,10 @@ export const GraphCanvas = (function() {
 
     function doDispose(obj)
     {
-        console.log("DISPOSE");
-        console.log(obj);
+        //@TODO make this work properly. Still experiencing JS memory leak
         if (obj)
         {
             if(obj.children && obj.children.length > 0) {
-                console.log('disposing of object children');
                 for (var i = 0; i < obj.children.length; i++)
                 {
                     doDispose(obj.children[i]);
@@ -62,16 +58,11 @@ export const GraphCanvas = (function() {
             }
 
             if(obj.geometry) {
-                console.log('disposing object geometry');
                 obj.geometry.dispose();
             }
             if(obj.material) {
-                console.log("MATERIAL IS...");
-                console.log(obj.material);
                 if (obj.material.length > 1) {
                     obj.material.forEach((mat) => {
-                        console.log("MATERIAL: ");
-                        console.log(mat);
                         removeMeshTextures(mat);
                     });
                 } else {
@@ -81,7 +72,6 @@ export const GraphCanvas = (function() {
         }
         const parent = obj.parent;
         parent.remove(obj);
-        console.log('setting obj as undefined');
         obj = undefined;
     }
 
@@ -119,34 +109,36 @@ export const GraphCanvas = (function() {
     }
 
     function handleClick() {
-        console.log('handleClick');
         //update our raycaster's position with the mouse position coordinates and camera info
         raycaster.setFromCamera(mousePos, camera);
         //check if our raycasted click event collides with a nodesphere
         const nodes = graphGroup.getObjectByProperty('name', 'nodeSphereGroup');
         const textNodes = graphGroup.getObjectByProperty('name', 'textGroup');
-        if(nodes && nodes.children.length || textNodes && textNodes.children.length) {
+        if((nodes && nodes.children.length) || (textNodes && textNodes.children.length)) {
             let intersects = raycaster.intersectObjects(nodes.children)
                 .filter((o) => {
+                    let object = null;
                     console.log(o);
                     if (o.object.visible) {
-                        return o.object;
+                        object = o.object.__data;
                     }
+                    return object;
                 });
 
             if (!intersects.length) {
+                //check if we hit a textnode instead. This needs a better way of doing it too.
                 intersects = raycaster.intersectObjects(textNodes.children)
                     .filter((o) => {
-                        console.log(o);
+                        let object = null;
                         if (o.object.visible) {
-                            return o.object;
+                            object = o.object.__data;
                         }
+                        return object;
                     });
             }
 
             //if our click collided with a node
             if (intersects.length) {
-                console.log("intersects has length");
                 selectedNode = intersects[0].object.__data;
             }
         }
@@ -166,12 +158,9 @@ export const GraphCanvas = (function() {
     //the mainscene is there to hold our 3d graph but also lights and viewfog or other globally stuff
     const mainScene = new THREE.Scene();
 
-
-
     // Capture mouse coords on move
     const raycaster = new THREE.Raycaster();
     const mousePos = new THREE.Vector2();
-
 
     //3d continued... controls.
     //have to import controls as non-ES6 because of scoping issues.
@@ -192,8 +181,9 @@ export const GraphCanvas = (function() {
 
     mainScene.add(graphGroup);
 
-    initLeapControls();
-    const swiper = window.controller.gesture('swipe');
+    //if init leap controls are connected...
+    //initLeapControls();
+    //const swiper = window.controller.gesture('swipe');
 
     let fetchingJson = false;
     let changedSet = false;
@@ -214,9 +204,6 @@ export const GraphCanvas = (function() {
                 addEnv(mainScene);
                 this.initThreeControls();
                 //map the newly created nodes to spheres
-                console.log("ADD 3d STUFF");
-                console.log(mappedData);
-
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
                         addSphere(node, nodeSphereGroup, true, camera.position);
@@ -257,27 +244,20 @@ export const GraphCanvas = (function() {
                     camera.lookAt(graphGroup.position);
                 }
 
-
                 raycaster.setFromCamera(mousePos, camera);
                 //this.tbControls.update();
                 this.updateControls();
 
-
                 if(textGroup && textGroup.children) {
                     for (let i = 0; i < textGroup.children.length; i++) {
-                        //@TODO have text children all look at camera. Figure out maths.
-                        /**console.log('textgroup');
-                        console.log(camera.position);
-                        console.log(textGroup.children[i].position);
+                        //const rC = new THREE.Raycaster();
+                        //rC.set(camera.position, textGroup.children[i].position);
+                        //console.log(rC);
 
-                        let textCameraVector3 = {
-                            x: (textGroup.children[i].position.x - camera.position.x),
-                            y: (textGroup.children[i].position.y - camera.position.y),
-                            z: (textGroup.children[i].position.z - camera.position.z)
-                        };
+                        //@TODO have text children all look at camera. Figure out maths. Include rotation problem
 
-                        console.log(textCameraVector3);**/
-                        //textGroup.children[i].position = textCameraVector3;
+                        /**console.log(textCameraVector3);**/
+                        textGroup.children[i].lookAt(camera.position);
                         //textGroup.children[i].lookAt(camera.position);
                     }
                 }
@@ -287,7 +267,7 @@ export const GraphCanvas = (function() {
                         //TODO: This should be done in Object3D.onBeforeRender
                         //and you need to work out the Vector or Quaternion that is the intersect of camera and node
                         //see: https://threejs.org/docs/#api/en/materials/ShaderMaterial
-                        nodeSphereGroup.children[i].children[0].material.uniforms.viewVector.value = camera.position;
+                        nodeSphereGroup.children[i].children[0].lookAt(camera.position);
                     }
                 }
 
@@ -302,8 +282,6 @@ export const GraphCanvas = (function() {
 
                 //if we haven't already generated our 3d objects
                 if(nodeSphereGroup.children.length === 0 || changedSet) {
-                    console.log('changed set');
-
                     //todo: check we have disposed of all our stuff
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
@@ -350,13 +328,11 @@ export const GraphCanvas = (function() {
                 controls.maxPolarAngle = Math.PI;
             },
             startLoop: function() {
-                console.log('startLoop');
                 if( !_frameId) {
                     _frameId = window.requestAnimationFrame( this.animate );
                 }
             },
             stopLoop: function() {
-                console.log('stoploop');
                 window.cancelAnimationFrame( _frameId );
                 //setting _frameId to null will pause THREE.js rendering
                 _frameId = null;
@@ -365,10 +341,11 @@ export const GraphCanvas = (function() {
                 // cancelAnimationFrame() won't throw an error
             },
             updateControls: function() {
+                //if init leap controls are connected...
                 //here for if I actually get that Leap Controller going properly
-                if(swiper) {
+                /**if(swiper) {
                     swiper.update((g) => swipe(g));
-                }
+                }**/
                 if(controls) {
                     controls.update();
                 }
@@ -404,7 +381,6 @@ export const GraphCanvas = (function() {
 
                 if(mappedData) {
                     mappedData.nodes.forEach(node => {
-
                         if(node.mesh) {
                             doDispose(node.mesh);
                         }
@@ -412,15 +388,12 @@ export const GraphCanvas = (function() {
                         if(node.displayText) {
                             doDispose(node.displayText);
                         }
-
-                        console.log(node);
                     });
 
                     mappedData.links.forEach(link => {
                         if(link.__line) {
                             doDispose(link.__line);
                         }
-                        console.log(link);
                     });
 
                     //doDispose(nodeSphereGroup);
@@ -452,7 +425,6 @@ export const GraphCanvas = (function() {
 
     return {
         getInstance: function () {
-            console.log('attempting to get 3d instance');
             if ( !instance ) {
                 instance = init();
                 return instance;

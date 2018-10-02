@@ -1,5 +1,8 @@
 #nodegraph {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
 }
 
 .info {
@@ -9,6 +12,7 @@
     font-size: 16px;
     max-width: 400px;
     text-align: left;
+    right: 0;
     background: rgba(0,0,0,0.8);
 }
 
@@ -25,16 +29,19 @@
     padding: 10px;
 }
 
-.instructions {
+.narrativeSelect {
     position: absolute;
     background: rgba(0,0,0,0.6);
     top: 0;
-    left: 30%;
     padding: 20px;
     color: white;
     font-size: 16px;
+    z-index: 1;
+    left: 0;
+    max-width: 20%;
 }
 
-.narrativeSelect select {
-    color: #000;
+select {
+    color: #fff;
+    background-color: #000;
 }

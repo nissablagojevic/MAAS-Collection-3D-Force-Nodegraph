@@ -16,11 +16,11 @@ FontLoader.load( 'lineto-circular.json', function ( f ) {
     return font = f;
 });
 
-manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+//manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
 
-    console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    //console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 
-};
+//};
 
 manager.onLoad = function ( ) {
 
@@ -28,11 +28,11 @@ manager.onLoad = function ( ) {
 
 };
 
-manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+//manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 
-    console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    //console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 
-};
+//};
 
 manager.onError = function ( url ) {
 

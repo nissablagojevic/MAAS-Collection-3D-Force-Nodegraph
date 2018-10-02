@@ -15,10 +15,6 @@ class App extends Component {
         }
     }
 
-    componentDidUpdate(prevProps) {
-        console.log("APP UPDATED");
-    }
-
     handleErrors(response) {
         if (!response.ok) {
             console.log(
@@ -60,7 +56,7 @@ class App extends Component {
                 <Router>
                     <div>
                         <Navigation/>
-                        <div>
+                        <div style={{position: 'relative'}}>
                             <Route path="/" component={SelectNarrative}/>
                             <Route exact path="/about" component={About}/>
                             <Route exact path="/:id" component={Nodegraph} />

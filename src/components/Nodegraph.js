@@ -1,13 +1,10 @@
 import { default as React, Component } from 'react';
 import qwest from 'qwest';
-import {sourceUrl, sourceQuery, nodeQuery, mapData, narrativesList} from './resolvers.js';
+import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
 
 import './Nodegraph.css';
 
 import NodeInfoWindow from './NodeInfoWindow';
-import Selector from './Selector';
-import SelectNarrative from './SelectNarrative';
-import Instructions from './Instructions';
 
 //3d stuff
 import {GraphCanvas} from './canvas.js';
@@ -44,23 +41,21 @@ class NodeGraph extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("COMPONENT DID UPDATE");
-
         if (prevProps !== this.props) {
             this.graphCanvas.setFetchingJson(true);
+            this.graphCanvas.stopLoop();
+            this.graphCanvas.remove3dStuff();
             this.getNarrative();
         }
 
         if(this.state.responseData && this.state.responseData.narratives[0]._id === this.state.narrative) {
-            console.log('have response data');
-            console.log(this.state.responseData);
             //super shallow check for object sameness
             if(JSON.stringify(this.state.responseData) !== JSON.stringify(prevState.responseData) ) {
+
+                //@TODO change to promises instead of this mess
                 const mappedData = mapData(this.state.responseData);
                 this.graphCanvas.setMappedData(mappedData);
                 if(this.graphCanvas.getMappedData()) {
-                    console.log("mapped data = ");
-                    console.log(mappedData);
                     this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
                     if(this.graphCanvas.isFetchingJson()) {
                         this.graphCanvas.setFetchingJson(false);
@@ -69,9 +64,6 @@ class NodeGraph extends Component {
                 }
             }
         } else {
-            console.log("RESPONSE IS ACTUALLY...");
-            console.log(this.state.responseData);
-            console.log(this.state.narrative);
             console.log('no response data');
             this.graphCanvas.setFetchingJson(true);
         }
@@ -84,16 +76,16 @@ class NodeGraph extends Component {
     }
 
     getNarrative() {
+        //@TODO This should be handled in App.js so we're not repeating it in SelectorNarrative
         let urlNarrative;
         //this is bound to be a problem
         if(this.props.location && this.props.location.pathname) {
             urlNarrative = parseInt(this.props.location.pathname.substring(1), 10);
         }
 
+        this.setState({ selectedNode: null});
+
         qwest.get(sourceUrl + sourceQuery(urlNarrative)).then((xhr, response) => {
-            console.log('qwest reget');
-            this.graphCanvas.stopLoop();
-            this.graphCanvas.remove3dStuff();
             this.setState({narrative: urlNarrative, responseData: response.data, fetchingJson: false});
         }).catch(function (e, xhr, response) {
             // Process the error in getting the json file
@@ -112,7 +104,6 @@ class NodeGraph extends Component {
                 id="nodegraph"
                 ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
                 onClick={() => this.handleClick()}>
-                <Instructions/>
                 <NodeInfoWindow node={this.state.selectedNode}/>
             </div>
         );

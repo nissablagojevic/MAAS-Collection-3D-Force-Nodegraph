@@ -16,6 +16,8 @@ class NodeInfoWindow extends Component {
         if(this.props.node !== null && this.props.node !== this.state.currentNode) {
             //[0] gives query type
             //[1] gives ID for type]
+            console.log("NODEINFOWINDOW SELECTEDNODE");
+            console.log(this.props.node);
             let selectedNode = this.props.node.split('-');
 
             //Another thing a GraphQL Schema would solve. Only can put objects in the infowindow right now.

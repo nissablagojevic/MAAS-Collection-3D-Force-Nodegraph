@@ -13,14 +13,15 @@ export default function Selector(props) {
 
         return(
             <select value={props.selectedItem} onChange={props.action}>
+                <option key="noValue" value="">Please select a narrative</option>
                 {options}
             </select>
         );
     }
 
     return (
-        <section>
+        <div>
             Loading...
-        </section>
+        </div>
     );
 }

@@ -3,6 +3,7 @@ import qwest from 'qwest';
 import {sourceUrl, narrativesList} from './resolvers.js';
 
 import Selector from './Selector';
+import Instructions from './Instructions';
 
 class SelectNarrative extends Component {
     constructor() {
@@ -20,17 +21,11 @@ class SelectNarrative extends Component {
 
         //this is bound to be a problem
         if(this.props.location && this.props.location.pathname) {
-
-            console.log(this.props.location.pathname);
-
             urlNarrative = parseInt(this.props.location.pathname.substring(1), 10);
-
             if (!isNaN(urlNarrative)) {
                 this.setState({selectedNarrative: urlNarrative});
             }
         }
-
-        console.log(this.props);
 
         //fetch list of narratives from API
         qwest.get(sourceUrl + narrativesList).then((xhr, response) => {
@@ -55,13 +50,15 @@ class SelectNarrative extends Component {
 
     render() {
         return (
-            <section>
-                <h3>Select Narrative</h3>
+            <div className="narrativeSelect">
+
+                <h3>Narrative:</h3>
                 <Selector
                     selectedItem={this.state.selectedNarrative}
                     list={this.state.narrativesList}
                     action={this.selectNarrative}/>
-            </section>
+                <Instructions/>
+            </div>
         );
     }
 }

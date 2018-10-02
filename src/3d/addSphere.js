@@ -83,7 +83,8 @@ export default function addSphere(node, graphGroup, addImage = true) {
                 "c":   { type: "f", value: 0.1 },
                 "p":   { type: "f", value: 5 },
                 glowColor: { type: "c", value: new THREE.Color(glowColour) },
-                viewVector: { type: "v3", value: {x: 1, y: 1, z: 1} }
+                //@TODO work out correct view vector for glowing effect
+                viewVector: { type: "v3", value: {x: 0, y: 0, z: 2000} }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
