@@ -54,6 +54,7 @@ class NodeGraph extends Component {
 
                 //@TODO change to promises instead of this mess
                 const mappedData = mapData(this.state.responseData);
+
                 this.graphCanvas.setMappedData(mappedData);
                 if(this.graphCanvas.getMappedData()) {
                     this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
