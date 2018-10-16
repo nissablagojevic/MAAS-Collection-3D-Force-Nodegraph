@@ -3,7 +3,7 @@ import {default as React} from 'react';
 export default function Selector(props) {
     const list = props.list;
 
-    if(list) {
+    if(list && !list.then) {
         const options = [];
 
         //currently assumed to be narrative id and title properties from graphql

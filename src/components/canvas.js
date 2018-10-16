@@ -192,6 +192,7 @@ export const GraphCanvas = (function() {
     const controls = new OrbitControls( camera, renderer.domElement );
 
     function init() {
+        console.log("GRAPH CANVAS INIT");
         instance = this;
 
         mousePos.x = -2; // Initialize off canvas
@@ -427,8 +428,8 @@ export const GraphCanvas = (function() {
         getInstance: function () {
             if ( !instance ) {
                 instance = init();
-                return instance;
             }
+            return instance;
         }
     }
 })();
