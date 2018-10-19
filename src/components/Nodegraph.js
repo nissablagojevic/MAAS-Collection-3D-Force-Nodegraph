@@ -1,9 +1,7 @@
 import { default as React, Component } from 'react';
-import {sourceUrl, sourceQuery, mapData} from './resolvers.js';
+import {mapData} from './resolvers.js';
 
 import './Nodegraph.css';
-
-import NodeInfoWindow from './NodeInfoWindow';
 
 //3d stuff
 import {GraphCanvas} from './canvas.js';
@@ -13,12 +11,8 @@ class NodeGraph extends Component {
         super();
         this.state = {
             width: '100%',
-            height: '100vh',
-            fetchingJson: false,
-            selectedNode: null
+            height: '100vh'
         };
-
-        this.handleClick = this.handleClick.bind(this);
     }
 
     componentDidMount() {
@@ -41,7 +35,6 @@ class NodeGraph extends Component {
                 if(!this.props.responseData.then && this.props.responseData.narratives[0]._id) {
                     //super shallow check for object sameness
                     if(JSON.stringify(this.props.responseData) !== JSON.stringify(prevProps.responseData) ) {
-                        console.log('MAPPING DATA');
                         const mappedData = mapData(this.props.responseData);
                         this.graphCanvas.setMappedData(mappedData);
                         this.graphCanvas.resizeCanvas(this.state.width, this.state.height);
@@ -60,17 +53,12 @@ class NodeGraph extends Component {
         this.graphCanvas.remove3dStuff();
     }
 
-    handleClick(e) {
-        this.setState({selectedNode: this.graphCanvas.selectNode()});
-    }
-
     render() {
         return (
             <div
                 id="nodegraph"
                 ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
-                onClick={() => this.handleClick()}>
-                <NodeInfoWindow node={this.state.selectedNode}/>
+                onClick={(e) => this.props.handleClick(e)}>
             </div>
         );
     }

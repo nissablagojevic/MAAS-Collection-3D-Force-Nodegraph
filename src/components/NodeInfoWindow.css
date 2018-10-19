@@ -1,0 +1,12 @@
+.info {
+    list-style-type: none;
+    padding: 1em;
+}
+
+.info li {
+    margin-bottom: 0.5em;
+}
+
+.info .key {
+    font-weight: bold;
+}

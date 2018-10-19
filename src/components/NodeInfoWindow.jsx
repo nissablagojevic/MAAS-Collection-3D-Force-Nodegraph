@@ -1,70 +1,56 @@
 import { default as React, Component } from 'react';
 
-import qwest from 'qwest';
-import {sourceUrl, nodeQuery} from './resolvers.js';
+import './NodeInfoWindow.css';
 
 class NodeInfoWindow extends Component {
     constructor() {
         super();
-        this.state = {
-            info: null,
-            currentNode: null
+
+        this.renderList = this.renderList.bind(this);
+        this.keyValueToList = this.keyValueToList.bind(this);
+    }
+
+
+    keyValueToList(property) {
+        if (property && typeof property === 'object') {
+            return Object.entries(property).map(([key,value])=>{
+                if (typeof value === 'object') {
+                    //@TODO extend this to deal with arrays better
+                    return (<li key={key} id={key}><span className="key">{key}</span> : <ul className="child">{this.keyValueToList(value)}</ul></li>);
+                } else {
+                    //don't display empty fields
+                    if (value) {
+                        return (
+                            <li key={key} id={key}>
+                                <span className="key">{key}</span>
+                                : {value.toString()}</li>
+                        );
+                    }
+                }
+            });
         }
     }
 
-    componentDidUpdate() {
-        if(this.props.node !== null && this.props.node !== this.state.currentNode) {
-            //[0] gives query type
-            //[1] gives ID for type]
-            console.log("NODEINFOWINDOW SELECTEDNODE");
-            console.log(this.props.node);
-            let selectedNode = this.props.node.split('-');
+    renderList(node) {
+        const nodeProperties = Object.getOwnPropertyNames(node);
 
-            //Another thing a GraphQL Schema would solve. Only can put objects in the infowindow right now.
-            if (selectedNode[0] === 'object') {
-                qwest.get(sourceUrl + nodeQuery(selectedNode[0],selectedNode[1])).then((xhr, response) => {
-                    console.log('qwest get sourceUrl + nodeQuery(selectedNode[0],selectedNode[1]))');
-                    let property = Object.getOwnPropertyNames(response.data);
+        if (nodeProperties && nodeProperties.length > 0 && node[nodeProperties[0]] && node[nodeProperties[0]].length > 0) {
+            const property = node[nodeProperties[0]].pop();
 
-                    //graphQL query returns things that look like this: {objects: [{key: value, ...}]}
-                    //so figure out what the key it has returned is, and pop off the array
-                    const thing = response.data[property[0]].pop();
-
-                    //@TODO get more properly recursive with this and map attributes back to the graphql schema
-                    //you're totally going to write that at some point. Right?
-                    const info = Object.entries(thing).map(([key,value])=>{
-                        if (typeof value !== 'object') {
-                            return (
-                                <li key={key}>{key} : {value.toString()}</li>
-                            );
-                        } else {
-                            let otherThing = Object.entries(value).map(([key2,value2])=>{
-                                return (
-                                    <li key={key2}>{key2} : {value2.toString()}</li>
-                                );
-                            });
-
-                            return (<li key={key}>{key} : <ul>{otherThing}</ul></li>);
-                        }
-                    });
-
-                    this.setState({info: info, currentNode: this.props.node});
-
-                }).catch(function(e, xhr, response) {
-                    // Process the error in getting the json file
-                    console.log('DATA RETRIEVAL ERROR');
-                    console.log(e);
-                });
+            //@TODO abstract this and map attributes back to the graphql schema
+            //you're totally going to write that at some point. Right?
+            if (property) {
+                return(<ul className="info">{this.keyValueToList(property)}</ul>);
             }
         }
     }
 
     render() {
         return (
-            <ul className="info">
-            {this.state.info ? <h3>Selected Node</h3> : ''}
-            {this.state.info}
-            </ul>
+            <div id="nodeInfo">
+            {this.props.node ? <h3>Selected Node</h3> : ''}
+            {this.renderList(this.props.node)}
+            </div>
         );
     }
 }

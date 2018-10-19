@@ -406,9 +406,6 @@ export const GraphCanvas = (function() {
             setFrameId: function(frameId) {
                 _frameId = frameId;
             },
-            getMappedData: function() {
-                return mappedData;
-            },
             setMappedData: function(data) {
                 mappedData = data;
             },

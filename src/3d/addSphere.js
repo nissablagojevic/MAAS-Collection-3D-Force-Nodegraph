@@ -30,6 +30,7 @@ export default function addSphere(node, graphGroup, addImage = true) {
                 glowColour = 0xffe589;
                 break;
             default:
+                //@TODO probably want to preempt three js loaders by preloading images in NodeContainer and passing to here
                 image = ImageLoader.load( node.mainImage );
                 glowColour = 0x54b1ff;
         }
@@ -68,7 +69,7 @@ export default function addSphere(node, graphGroup, addImage = true) {
 
     } else {
         sphereGeometry = defaultGeometry;
-        //material.emissive = new THREE.Color(0x89D4FF);
+        material.emissive = new THREE.Color(0x89D4FF);
     }
 
     const sphere = new THREE.Mesh(sphereGeometry, material);

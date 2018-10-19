@@ -20,10 +20,6 @@ class SelectNarrative extends Component {
     }
 
     selectNarrative(event) {
-        console.log("SELECTNARRATIVE");
-        console.log(this.props);
-        console.log(this.state);
-        console.log(event);
         let narrative;
         let location;
         if (!event) {
@@ -33,17 +29,13 @@ class SelectNarrative extends Component {
                 narrative = '';
             }
         } else {
-            console.log(event.target);
-            console.log(event.target.value);
             narrative = parseInt(event.target.value, 10);
             location = {
                 pathname: `/${narrative}`,
             };
 
             this.props.history.push(location)
-
         }
-        // @TODO Broke the select again, only gives the default 2087 again
         this.setState({selectedNarrative: narrative});
     }
 

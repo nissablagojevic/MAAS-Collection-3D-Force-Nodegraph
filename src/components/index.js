@@ -10,4 +10,6 @@ import Selector from './Selector';
 
 import Instructions from './Instructions';
 
-export { Navigation, About, Nodegraph, SelectNarrative, Selector, Instructions };
+import NodeInfoWindow from './NodeInfoWindow';
+
+export { Navigation, About, Nodegraph, SelectNarrative, Selector, Instructions, NodeInfoWindow };
