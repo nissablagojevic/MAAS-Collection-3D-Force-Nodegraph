@@ -1,13 +1,17 @@
 import { default as React, Component } from 'react';
-
-import { Nodegraph, SelectNarrative, NodeInfoWindow } from '../components';
-
+import { Nodegraph, SelectNarrative, NodeInfoWindow, Instructions } from '../components';
 import {sourceUrl, sourceQuery, narrativesList, nodeQuery} from '../components/resolvers.js';
-
-//3d stuff
 import {GraphCanvas} from '../components/canvas.js';
+import './NodegraphContainer.css';
 
-//or even further omitting extra ()
+function parseNarrativeId(location) {
+    if(location && location.pathname) {
+        return parseInt(location.pathname.substring(1), 10);
+    }
+
+    return null;
+}
+
 let NodegraphContainer = Nodegraph => class extends Component {
     constructor() {
         super();
@@ -16,12 +20,10 @@ let NodegraphContainer = Nodegraph => class extends Component {
             narrativesList: null,
             responseData: null,
             selectedNode: null
-        }
+        };
 
-        this.parseNarrative = this.parseNarrative.bind(this);
         this.getNarrativeList = this.getNarrativeList.bind(this);
         this.getQuery = this.getQuery.bind(this);
-        this.parseNarrative = this.parseNarrative.bind(this);
         this.updateData = this.updateData.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.getNodeInfo = this.getNodeInfo.bind(this);
@@ -33,14 +35,15 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.parseNarrative() !== this.state.selectedNarrative) {
+        let urlNarrative = parseNarrativeId(this.props.location);
+
+        if (urlNarrative && urlNarrative !== this.state.selectedNarrative) {
             this.updateData();
         }
-
     }
 
     updateData() {
-        const narrative = this.parseNarrative();
+        const narrative = parseNarrativeId(this.props.location);
         let queryData = this.state.responseData;
         let narrativesList = this.state.narrativesList;
 
@@ -53,16 +56,6 @@ let NodegraphContainer = Nodegraph => class extends Component {
         }
 
         this.setState({selectedNarrative: narrative, narrativesList: narrativesList, responseData: queryData});
-    }
-
-    parseNarrative() {
-        let urlNarrative;
-
-        if(this.props.location && this.props.location.pathname) {
-            urlNarrative = parseInt(this.props.location.pathname.substring(1), 10);
-        }
-
-        return urlNarrative;
     }
 
     async getQuery(narrative) {
@@ -94,9 +87,6 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     handleClick() {
-        console.log("NODEGRAPH CONTAINER HANDLECLICK");
-        console.log(this.state.selectedNode);
-        console.log(this.graphCanvas.selectNode());
         const selectedNode = this.graphCanvas.selectNode();
         if (selectedNode && selectedNode !== this.state.selectedNode) {
             const node = selectedNode.split('-');
@@ -122,16 +112,17 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     render() {
-        console.log("NODEGRAPH CONTAINER render");
         return (
             <div id="nodegraphContainer">
-                <SelectNarrative {...this.props} {... this.state}/>
                 <Nodegraph {...this.props} {... this.state} handleClick={this.handleClick}/>
-                {this.state.selectedNode ? <NodeInfoWindow node={this.state.selectedNode}/> : ''}
+                <div id="infoWindows">
+                    <SelectNarrative {...this.props} {... this.state}/>
+                    <Instructions/>
+                    {this.state.selectedNode ? <NodeInfoWindow node={this.state.selectedNode}/> : ''}
+                </div>
             </div>
         )
     }
-};
+}
 
-//finally any definition can be used like that:
 export default NodegraphContainer(Nodegraph);

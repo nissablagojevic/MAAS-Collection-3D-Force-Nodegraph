@@ -1,4 +1,5 @@
-import {default as React} from 'react';
+import { default as React } from 'react';
+import './Selector.css';
 
 export default function Selector(props) {
     const list = props.list;
@@ -21,7 +22,7 @@ export default function Selector(props) {
 
     return (
         <div>
-            Loading...
+            Selector Loading...
         </div>
     );
 }

@@ -57,9 +57,10 @@ class NodeGraph extends Component {
         return (
             <div
                 id="nodegraph"
-                ref={mount => this.mount = mount} style={{width: this.state.width, height: this.state.height}}
-                onClick={(e) => this.props.handleClick(e)}>
-            </div>
+                ref={mount => this.mount = mount}
+                style={{width: this.state.width, height: this.state.height}}
+                onClick={(e) => this.props.handleClick(e)}
+            />
         );
     }
 }

@@ -1,8 +1,6 @@
 import { default as React, Component } from 'react';
-import {sourceUrl, narrativesList} from './resolvers.js';
-
 import Selector from './Selector';
-import Instructions from './Instructions';
+import './SelectNarrative.css';
 
 class SelectNarrative extends Component {
     constructor() {
@@ -16,7 +14,6 @@ class SelectNarrative extends Component {
 
     componentDidMount() {
         this.selectNarrative();
-
     }
 
     selectNarrative(event) {
@@ -41,13 +38,12 @@ class SelectNarrative extends Component {
 
     render() {
         return (
-            <div className="narrativeSelect">
+            <div id="selectNarrative" className="info">
                 <h3>Narrative:</h3>
                 <Selector
                     selectedItem={this.props.selectedNarrative}
                     list={this.props.narrativesList}
                     action={this.selectNarrative}/>
-                <Instructions/>
             </div>
         );
     }

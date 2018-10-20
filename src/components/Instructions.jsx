@@ -1,8 +1,9 @@
 import { default as React } from 'react';
+import './Instructions.css';
 
 export default function Instructions(props) {
     return (
-        <div className="instructions">
+        <div id="instructions" className="info">
             <h3>Instructions:</h3>
             <p>Select a narrative above</p>
             <p>Camera controls -

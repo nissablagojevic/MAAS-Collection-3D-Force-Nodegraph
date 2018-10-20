@@ -1,18 +1,8 @@
-#nodegraph {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 0;
-}
-
 .info {
-    position: absolute;
     padding: 10px;
     color: white;
     font-size: 16px;
-    max-width: 400px;
     text-align: left;
-    right: 0;
     background: rgba(0,0,0,0.8);
 }
 
@@ -27,21 +17,4 @@
     float: left;
     clear: both;
     padding: 10px;
-}
-
-.narrativeSelect {
-    position: absolute;
-    background: rgba(0,0,0,0.6);
-    top: 0;
-    padding: 20px;
-    color: white;
-    font-size: 16px;
-    z-index: 1;
-    left: 0;
-    max-width: 20%;
-}
-
-select {
-    color: #fff;
-    background-color: #000;
 }

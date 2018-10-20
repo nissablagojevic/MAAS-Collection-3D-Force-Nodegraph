@@ -1,12 +1,16 @@
-.info {
-    list-style-type: none;
-    padding: 1em;
+#nodeInfo {
+    border: 1px yellow solid;
 }
 
-.info li {
+.nodePropertyList {
+    list-style-type: none;
+    padding: 0;
+}
+
+.nodePropertyList li {
     margin-bottom: 0.5em;
 }
 
-.info .key {
+.nodePropertyList .key {
     font-weight: bold;
 }
