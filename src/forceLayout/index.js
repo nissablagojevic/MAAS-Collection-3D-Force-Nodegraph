@@ -31,7 +31,6 @@ export const GraphLayout = (function() {
             createForceLayout: function(mappedData){
                 data = mappedData;
                 console.log('createForceLayout');
-                console.log(data);
                 // Feed data to force-directed layout
                 // either remove the d3 version or get it working with this later.
                 if (isD3Sim && data !== null) {
@@ -50,7 +49,6 @@ export const GraphLayout = (function() {
                     const graph = ngraph.graph();
 
                     console.log('ngraph graph');
-                    console.log(graph);
 
                     if(data !== null) {
                         const centralNode = data.nodes[0];

@@ -11,6 +11,39 @@ export let sunTexture = null;
 export let cubeTexture = null;
 export let font = null;
 
+// create custom material from the shader code above
+// that is within specially labeled script tags
+// credit: http://stemkoski.github.io/Three.js/Shader-Glow.html
+export const glowMaterial = (glowColour) => {
+    if (!glowColour) {
+        glowColour = 0xff0000;
+    }
+    return new THREE.ShaderMaterial(
+    {
+        uniforms:
+        {
+            "c":   { type: "f", value: 0.1 },
+            "p":   { type: "f", value: 5 },
+            glowColor: { type: "c", value: new THREE.Color(glowColour) },
+            //@TODO work out correct view vector for glowing effect
+            viewVector: { type: "v3", value: {x: 0, y: 0, z: 2000} }
+        },
+        vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        transparent: true
+    }   )};
+
+
+export const preloadImage = (array, id, i) => {
+    ImageLoader.load(i, (i) => {
+        i.name = id;
+        array.push(i);
+    });
+};
+
+
 
 FontLoader.load( 'lineto-circular.json', function ( f ) {
     return font = f;

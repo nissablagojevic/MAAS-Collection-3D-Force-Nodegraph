@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import { addLine, addSphere, addText, addEnv, addGUI, font} from '../3d';
+import { addLine, addSphere, addText, addEnv, addGUI, font, errorImage, preloadImage } from '../3d';
 import { GraphLayout } from '../forceLayout';
+
+import { ImageLoader } from '../3d/loaders.js';
 
 //leap controls
 //import {initLeapControls, swipe} from "../leap";
@@ -8,6 +10,7 @@ import { GraphLayout } from '../forceLayout';
 
 export const GraphCanvas = (function() {
     let instance;
+    let images = [];
 
     //d3 graph calculation stuff
     const graphLayout = GraphLayout.getInstance();
@@ -151,6 +154,11 @@ export const GraphCanvas = (function() {
         return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
     }
 
+    function getImage() {
+        //get domnode from NodegraphContainer
+        let texture = new THREE.CanvasTexture(errorImage);
+    }
+
     const camera = new THREE.PerspectiveCamera();
     camera.position.z = 2000;
     camera.far = 20000;
@@ -199,7 +207,6 @@ export const GraphCanvas = (function() {
         mousePos.y = -2;
         let mappedData = null;
 
-
         return {
             add3dStuff: function() {
                 addEnv(mainScene);
@@ -207,6 +214,7 @@ export const GraphCanvas = (function() {
                 //map the newly created nodes to spheres
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
+                        //@TODO if image is already in cache, pass it in here
                         addSphere(node, nodeSphereGroup, true, camera.position);
                     }
 
@@ -283,6 +291,9 @@ export const GraphCanvas = (function() {
 
                 //if we haven't already generated our 3d objects
                 if(nodeSphereGroup.children.length === 0 || changedSet) {
+                    console.log("CHANGED SET");
+                    console.log(nodeSphereGroup.children.length);
+                    console.log(changedSet);
                     //todo: check we have disposed of all our stuff
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
@@ -294,13 +305,46 @@ export const GraphCanvas = (function() {
                         instance.add3dStuff();
                         //and let d3 do some maths with it.
                         layout = graphLayout.createForceLayout(mappedData);
-
                     } else {
+                        console.log("if not fetching json and have mappedData");
+                        console.log(fetchingJson);
+                        console.log(mappedData);
                         console.log("missing: fetchingjson || graphql sourceurl || mapped data");
                         return;
                     }
 
                 } else {
+
+                    if (mappedData && images && images.length && nodeSphereGroup.children.length) {
+
+                        for (let i = 0; i < images.length; i++) {
+                            for (let j = 0; j < nodeSphereGroup.children.length; j++) {
+                                if (images[i].name === nodeSphereGroup.children[j].__data) {
+                                    //@TODO no special loading for sun and other stuff yet
+                                    if (nodeSphereGroup.children[j].material.envMap.name === 'errorImage') {
+                                        const nodeSphere = nodeSphereGroup.children[j];
+                                        const glowSphere = nodeSphere.children[0];
+                                        let texture = new THREE.CanvasTexture(images[i]);
+
+                                        texture.mapping = THREE.SphericalReflectionMapping;
+                                        texture.name = 'canvasTex-' + nodeSphere.__data;
+
+                                        //prevent three.js complaining about images not being 2^n width and height
+                                        texture.minFilter = THREE.LinearFilter;
+
+                                        nodeSphere.material.envMap = texture;
+                                        nodeSphere.material.needsUpdate = true;
+
+                                        glowSphere.material.uniforms.glowColor.value = new THREE.Color(0x54b1ff);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+
+
                         graphGroup.rotation.y += 0.0002;
 
                         instance.updateCamera();
@@ -375,10 +419,12 @@ export const GraphCanvas = (function() {
                 }
             },
             remove3dStuff: function(obj = null) {
+                console.log('remove3dStuff');
                 //TODO: need a proper way to dispose and memory manage here.
                 changedSet = true;
                 layout = null;
                 tickCounter = 0;
+                images = [];
 
                 if(mappedData) {
                     mappedData.nodes.forEach(node => {
@@ -389,12 +435,16 @@ export const GraphCanvas = (function() {
                         if(node.displayText) {
                             doDispose(node.displayText);
                         }
+
+                        return node = null;
                     });
 
                     mappedData.links.forEach(link => {
                         if(link.__line) {
                             doDispose(link.__line);
                         }
+
+                        return link = null;
                     });
 
                     //doDispose(nodeSphereGroup);
@@ -402,6 +452,9 @@ export const GraphCanvas = (function() {
                 }
 
                 renderer.render(mainScene, camera);
+            },
+            preloadImage: function(id, i) {
+                preloadImage(images, id, i);
             },
             setFrameId: function(frameId) {
                 _frameId = frameId;

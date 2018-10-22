@@ -4,7 +4,7 @@ import {mapData} from './resolvers.js';
 import './Nodegraph.css';
 
 //3d stuff
-import {GraphCanvas} from './canvas.js';
+import {GraphCanvas} from './GraphCanvas.js';
 
 class NodeGraph extends Component {
     constructor() {

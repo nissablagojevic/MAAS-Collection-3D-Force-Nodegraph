@@ -21,7 +21,9 @@ export default function addEnv(scene, ambientLight = null, directLight = null, s
         textureCube = cubeTexture;
     } else {
         //texture must be width = height and ideally width = 2^n
-        textureCube = CubeTextureLoader.load( skyBoxTexture );
+        textureCube = CubeTextureLoader.load( skyBoxTexture, (tex) => {
+
+        } );
     }
 
     textureCube.format = THREE.RGBFormat;

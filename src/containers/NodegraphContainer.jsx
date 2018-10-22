@@ -1,8 +1,9 @@
 import { default as React, Component } from 'react';
 import { Nodegraph, SelectNarrative, NodeInfoWindow, Instructions } from '../components';
-import {sourceUrl, sourceQuery, narrativesList, nodeQuery} from '../components/resolvers.js';
-import {GraphCanvas} from '../components/canvas.js';
+import {sourceUrl, sourceQuery, narrativesList, nodeQuery, mapData} from '../components/resolvers.js';
+import {GraphCanvas} from '../components/GraphCanvas.js';
 import './NodegraphContainer.css';
+
 
 function parseNarrativeId(location) {
     if(location && location.pathname) {
@@ -27,6 +28,7 @@ let NodegraphContainer = Nodegraph => class extends Component {
         this.updateData = this.updateData.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.getNodeInfo = this.getNodeInfo.bind(this);
+        this.preloadImages = this.preloadImages.bind(this);
     }
 
     componentDidMount() {
@@ -35,10 +37,15 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        console.log("NODEGRAPH CONTAINER componentDidUpdate")
         let urlNarrative = parseNarrativeId(this.props.location);
 
         if (urlNarrative && urlNarrative !== this.state.selectedNarrative) {
             this.updateData();
+        }
+
+        if (this.state.responseData && this.state.responseData !== prevState.responseData) {
+            this.preloadImages(this.state.responseData);
         }
     }
 
@@ -57,7 +64,7 @@ let NodegraphContainer = Nodegraph => class extends Component {
 
         this.setState({selectedNarrative: narrative, narrativesList: narrativesList, responseData: queryData});
     }
-
+    //get single narrative
     async getQuery(narrative) {
         try {
             let response = await fetch(
@@ -72,6 +79,7 @@ let NodegraphContainer = Nodegraph => class extends Component {
         }
     }
 
+    //get list of all narratives
     async getNarrativeList() {
         try {
             let response = await fetch(
@@ -84,6 +92,21 @@ let NodegraphContainer = Nodegraph => class extends Component {
         } catch(error) {
             console.error(error);
         }
+    }
+
+    preloadImages(responseData) {
+        console.log("PRELOAD");
+        if(!responseData || responseData.then) {
+            console.log('but no response data yet');
+            return null;
+        }
+
+        mapData(responseData).nodes.filter((i) => {
+            if (i.mainImage) {
+                this.graphCanvas.preloadImage(i.id, i.mainImage);
+            }
+            return null;
+        });
     }
 
     handleClick() {

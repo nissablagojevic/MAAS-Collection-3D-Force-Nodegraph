@@ -102,7 +102,6 @@ export function mapData(data) {
     return graphSchema;
 }
 
-
 /*
  * Description: Using a starting object, create 3d-graph links according to a provided linkSchema
  *

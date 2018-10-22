@@ -21,6 +21,7 @@ export default function addText(node, graphGroup, font, textMaterials = null) {
      geometry.computeBoundingBox();
      const textMesh = new THREE.Mesh( geometry, textMaterials );
      textMesh.__data = node.id;
+    textMesh.name = node.name; // Add label
      graphGroup.add(node.displayText = textMesh);
 
 }
