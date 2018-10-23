@@ -1,9 +1,8 @@
-import addLine from './addLine.js';
-import addSphere from './addSphere.js';
-import addSprite from './addSprite.js';
-import addText from './addText.js';
-import addEnv from './addEnv.js';
-import addGUI from './addGUI.js';
-import {errorImage, font, FontLoader, CubeTextureLoader, ImageLoader, cubeTexture, sunTexture, preloadImage} from './loaders.js';
+import {errorImage, FontLoader, CubeTextureLoader, ImageLoader, cubeTexture, sunTexture, preloadImage, preloadFont} from './loaders.js';
+import Line from './Line.js';
+import Text from './Text.js';
+import Sphere from './Sphere.js';
+import Environment from './Environment.js';
+import Gui from './Gui.js';
 
-export { addLine, addSphere, addSprite, addText, addEnv, addGUI, errorImage, font, FontLoader, CubeTextureLoader, ImageLoader, cubeTexture, sunTexture, preloadImage };
+export { Text, Sphere, Line, Environment, Gui, errorImage,  FontLoader, CubeTextureLoader, ImageLoader, cubeTexture, sunTexture, preloadImage, preloadFont };

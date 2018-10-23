@@ -50,8 +50,13 @@ class App extends Component {
                         <Navigation/>
                         <div style={{position: 'relative'}}>
                         {/** @TODO: Fix routing **/}
-                            <Route path="/about" render={() => <About/>}/>
-                            <Route path="/:id" render={(props) => <NodegraphContainer {...props}/>} />
+                            <Route exact path="/about" render={() => <About/>}/>
+                            <Route path="/:id" render={
+                                (props) => {
+                                    console.log("ROUTER");
+                                    console.log(props);
+                                    return <NodegraphContainer {...props}/>
+                                }} />
                         </div>
                     </div>
                 </Router>

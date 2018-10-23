@@ -28,7 +28,6 @@ let NodegraphContainer = Nodegraph => class extends Component {
         this.updateData = this.updateData.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.getNodeInfo = this.getNodeInfo.bind(this);
-        this.preloadImages = this.preloadImages.bind(this);
     }
 
     componentDidMount() {
@@ -37,15 +36,19 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("NODEGRAPH CONTAINER componentDidUpdate")
         let urlNarrative = parseNarrativeId(this.props.location);
 
         if (urlNarrative && urlNarrative !== this.state.selectedNarrative) {
             this.updateData();
         }
 
-        if (this.state.responseData && this.state.responseData !== prevState.responseData) {
-            this.preloadImages(this.state.responseData);
+        if (this.state.responseData && !this.state.responseData.then && this.state.responseData !== prevState.responseData) {
+            mapData(this.state.responseData).nodes.filter((i) => {
+                if (i.mainImage) {
+                    this.graphCanvas.preloadImage(i.id, i.mainImage);
+                }
+                return null;
+            });
         }
     }
 
@@ -94,31 +97,6 @@ let NodegraphContainer = Nodegraph => class extends Component {
         }
     }
 
-    preloadImages(responseData) {
-        console.log("PRELOAD");
-        if(!responseData || responseData.then) {
-            console.log('but no response data yet');
-            return null;
-        }
-
-        mapData(responseData).nodes.filter((i) => {
-            if (i.mainImage) {
-                this.graphCanvas.preloadImage(i.id, i.mainImage);
-            }
-            return null;
-        });
-    }
-
-    handleClick() {
-        const selectedNode = this.graphCanvas.selectNode();
-        if (selectedNode && selectedNode !== this.state.selectedNode) {
-            const node = selectedNode.split('-');
-            //@TODO Currently only works for objects due to lack of Schema
-            if (node && node[0] === 'object' ) {
-                this.getNodeInfo(node);
-            }
-        }
-    }
 
     async getNodeInfo(node) {
         try {
@@ -131,6 +109,17 @@ let NodegraphContainer = Nodegraph => class extends Component {
             return responseJson;
         } catch (error) {
             console.error(error);
+        }
+    }
+
+    handleClick() {
+        const selectedNode = this.graphCanvas.selectNode();
+        if (selectedNode && selectedNode !== this.state.selectedNode) {
+            const node = selectedNode.split('-');
+            //@TODO Currently only works for objects due to lack of Schema
+            if (node && node[0] === 'object' ) {
+                this.getNodeInfo(node);
+            }
         }
     }
 

@@ -1,8 +1,6 @@
 import * as THREE from 'three';
-import { addLine, addSphere, addText, addEnv, addGUI, font, errorImage, preloadImage } from '../3d';
+import { preloadImage, preloadFont, Text, Sphere, Line, Environment } from '../3d';
 import { GraphLayout } from '../forceLayout';
-
-import { ImageLoader } from '../3d/loaders.js';
 
 //leap controls
 //import {initLeapControls, swipe} from "../leap";
@@ -12,8 +10,13 @@ export const GraphCanvas = (function() {
     let instance;
     let images = [];
 
+    preloadImage(images, 'suntex.jpg', 'suntex.jpg');
+    preloadImage(images, 'error.jpg', 'error.jpg');
+    const font = preloadFont();
+
     //d3 graph calculation stuff
     const graphLayout = GraphLayout.getInstance();
+
     const isD3Sim = graphLayout.isD3Sim();
     let _frameId = null;
     let layout = null;
@@ -25,6 +28,7 @@ export const GraphCanvas = (function() {
         antialias: true,
         alpha: true,
     });
+
     renderer.domElement.addEventListener("mousemove", mouseMove);
     renderer.domElement.addEventListener("click", handleClick);
 
@@ -154,11 +158,6 @@ export const GraphCanvas = (function() {
         return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
     }
 
-    function getImage() {
-        //get domnode from NodegraphContainer
-        let texture = new THREE.CanvasTexture(errorImage);
-    }
-
     const camera = new THREE.PerspectiveCamera();
     camera.position.z = 2000;
     camera.far = 20000;
@@ -199,6 +198,7 @@ export const GraphCanvas = (function() {
     // Add camera interaction and mousebased input
     const controls = new OrbitControls( camera, renderer.domElement );
 
+
     function init() {
         console.log("GRAPH CANVAS INIT");
         instance = this;
@@ -209,32 +209,34 @@ export const GraphCanvas = (function() {
 
         return {
             add3dStuff: function() {
-                addEnv(mainScene);
+                Environment.addEnvironment(mainScene);
                 this.initThreeControls();
                 //map the newly created nodes to spheres
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
                         //@TODO if image is already in cache, pass it in here
-                        addSphere(node, nodeSphereGroup, true, camera.position);
+                        Sphere.addSphere(node, nodeSphereGroup, true, camera.position);
                     }
 
                     if(node.type === 'narrative') {
-                        node.mainImage = 'suntex.jpg';
                         node.size = 20;
-
-                        addSphere(node, nodeSphereGroup);
+                        node.mainImage = 'suntex.jpg';
+                        Sphere.addSphere(node, nodeSphereGroup);
                         //addText(node, textGroup);
                     }
 
                     if(node.type === 'term') {
-                        addText(node, textGroup, font);
+                        font.then((f) => {
+                            //@TODO make it so that we don't instantiate rubbish repeatedly
+                            Text.addText(node, textGroup, f);
+                        });
                     }
 
                 });
 
                 //map the newly created links to lines in THREE.js and add them to the scene
                 mappedData.links.forEach(link => {
-                    addLine(link, lineGroup);
+                    Line.addLine(link, lineGroup);
                 });
 
                 graphGroup.add(lineGroup);
@@ -285,15 +287,16 @@ export const GraphCanvas = (function() {
                 renderer.render(mainScene, camera);
             },
             animate: function() {
+
                 if(_frameId && typeof _frameId === 'object') {
                     _frameId();
                 }
 
+
+                //@TODO take alllll this out of the animate function and use an observer
                 //if we haven't already generated our 3d objects
                 if(nodeSphereGroup.children.length === 0 || changedSet) {
-                    console.log("CHANGED SET");
-                    console.log(nodeSphereGroup.children.length);
-                    console.log(changedSet);
+
                     //todo: check we have disposed of all our stuff
                     //check we haven't already fetched the graphQL data (although we definitely do start in componentDidMount,
                     //setting the fetchingJson flag just prevents responseData from being evaluated every animation frame.
@@ -316,11 +319,9 @@ export const GraphCanvas = (function() {
                 } else {
 
                     if (mappedData && images && images.length && nodeSphereGroup.children.length) {
-
                         for (let i = 0; i < images.length; i++) {
                             for (let j = 0; j < nodeSphereGroup.children.length; j++) {
                                 if (images[i].name === nodeSphereGroup.children[j].__data) {
-                                    //@TODO no special loading for sun and other stuff yet
                                     if (nodeSphereGroup.children[j].material.envMap.name === 'errorImage') {
                                         const nodeSphere = nodeSphereGroup.children[j];
                                         const glowSphere = nodeSphere.children[0];
@@ -336,6 +337,8 @@ export const GraphCanvas = (function() {
                                         nodeSphere.material.needsUpdate = true;
 
                                         glowSphere.material.uniforms.glowColor.value = new THREE.Color(0x54b1ff);
+
+                                        break;
                                     }
                                 }
                             }
@@ -419,8 +422,6 @@ export const GraphCanvas = (function() {
                 }
             },
             remove3dStuff: function(obj = null) {
-                console.log('remove3dStuff');
-                //TODO: need a proper way to dispose and memory manage here.
                 changedSet = true;
                 layout = null;
                 tickCounter = 0;
@@ -476,9 +477,10 @@ export const GraphCanvas = (function() {
 
     return {
         getInstance: function () {
-            if ( !instance ) {
+            if (!instance ) {
                 instance = init();
             }
+
             return instance;
         }
     }
