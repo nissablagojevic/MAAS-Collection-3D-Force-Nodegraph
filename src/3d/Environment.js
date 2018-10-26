@@ -2,20 +2,17 @@ import * as THREE from 'three';
 
 import { CubeTextureLoader, cubeTexture } from './loaders.js';
 
+import settings from './settings';
+
 const Environment = (function() {
     return {
         addEnvironment: (scene, ambientLight = null, directLight = null, skyBoxTexture = null, viewFog = null) => {
-            //fiat lux
-            var light = new THREE.PointLight( 0xFFA500, 1, 2500 );
-            light.position.set( 0, 0, 0 );
-            scene.add( light );
-
             if(!ambientLight) {
-                ambientLight = new THREE.AmbientLight(0xbbbbbb);
+                ambientLight = settings.defaultAmbientLight;
             }
 
             if(!directLight) {
-                directLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                directLight = settings.defaultDirectionalLight;
             }
 
             let textureCube;
@@ -30,23 +27,15 @@ const Environment = (function() {
             }
 
             if(!viewFog) {
-                viewFog = new THREE.Fog(0xfff189, 1, 10000);
+                viewFog = settings.defaultViewFog;
             }
 
             scene.fog = viewFog;
 
-            var cubeShader = THREE.ShaderLib[ "cube" ];
-
-            var cubeMaterial = new THREE.ShaderMaterial( {
-                fragmentShader: cubeShader.fragmentShader,
-                vertexShader: cubeShader.vertexShader,
-                uniforms: cubeShader.uniforms,
-                depthWrite: false,
-                side: THREE.BackSide,
-            } );
+            var cubeMaterial = settings.defaultWorldMaterial;
             cubeMaterial.uniforms[ "tCube" ].value = textureCube;
             // Skybox
-            const cubeMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 25000, 25000, 25000 ), cubeMaterial );
+            const cubeMesh = new THREE.Mesh( settings.defaultWorldGeometry, cubeMaterial );
             cubeMesh.name = "skybox";
             scene.add( cubeMesh );
             scene.add( ambientLight );

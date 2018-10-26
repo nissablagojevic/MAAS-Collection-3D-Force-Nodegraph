@@ -215,20 +215,23 @@ export const GraphCanvas = (function() {
                 mappedData.nodes.forEach(node => {
                     if(node.type === 'object') {
                         //@TODO if image is already in cache, pass it in here
-                        Sphere.addSphere(node, nodeSphereGroup, true, camera.position);
+                        const sphere = Sphere.addSphere(node, true, camera.position);
+                        nodeSphereGroup.add(node.mesh = sphere);
                     }
 
                     if(node.type === 'narrative') {
                         node.size = 20;
                         node.mainImage = 'suntex.jpg';
-                        Sphere.addSphere(node, nodeSphereGroup);
+                        const sphere = Sphere.addSphere(node);
+                        nodeSphereGroup.add(node.mesh = sphere);
                         //addText(node, textGroup);
                     }
 
                     if(node.type === 'term') {
                         font.then((f) => {
                             //@TODO make it so that we don't instantiate rubbish repeatedly
-                            Text.addText(node, textGroup, f);
+                            let text = Text.makeText(node, f);
+                            textGroup.add(node.displayText = text);
                         });
                     }
 
@@ -236,7 +239,8 @@ export const GraphCanvas = (function() {
 
                 //map the newly created links to lines in THREE.js and add them to the scene
                 mappedData.links.forEach(link => {
-                    Line.addLine(link, lineGroup);
+                    const line = Line.makeLine(link);
+                    lineGroup.add(link.__line = line);
                 });
 
                 graphGroup.add(lineGroup);
@@ -319,6 +323,8 @@ export const GraphCanvas = (function() {
                 } else {
 
                     if (mappedData && images && images.length && nodeSphereGroup.children.length) {
+                        console.log("IMAGES");
+                        console.log(images);
                         for (let i = 0; i < images.length; i++) {
                             for (let j = 0; j < nodeSphereGroup.children.length; j++) {
                                 if (images[i].name === nodeSphereGroup.children[j].__data) {

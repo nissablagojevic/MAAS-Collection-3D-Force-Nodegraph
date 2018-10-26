@@ -32,7 +32,7 @@ export const GraphLayout = (function() {
                 data = mappedData;
                 console.log('createForceLayout');
                 // Feed data to force-directed layout
-                // either remove the d3 version or get it working with this later.
+                // @TODO: either remove the d3 version or get it working with this later.
                 if (isD3Sim && data !== null) {
                     // D3-force
                     (layout = d3ForceLayout)

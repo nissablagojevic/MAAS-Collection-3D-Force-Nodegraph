@@ -1,25 +1,25 @@
 import * as THREE from 'three';
 
-import { defaultLineMaterial, defaultLineGeometry } from './settings';
+import settings from './settings';
 
 const Line = (function() {
-    function addLine(link, graphGroup, material = null, geometry = null) {
+    function makeLine(link, material = null, geometry = null) {
         if(!material) {
-            material = defaultLineMaterial.clone();
+            material = settings.defaultLineMaterial.clone();
         }
 
         if(!geometry) {
-            geometry = defaultLineGeometry.clone();
+            geometry = settings.defaultLineGeometry.clone();
         }
 
         const line = new THREE.Line(geometry, material);
         line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
 
-        graphGroup.add(link.__line = line);
+        return line;
     }
 
     return {
-        addLine: addLine
+      makeLine: makeLine
     }
 })();
 

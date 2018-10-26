@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { errorImage, sunTexture } from './loaders';
-import { defaultSphereGeometry, defaultGlowColour, defaultGlowMaterial } from './settings';
+import settings from './settings';
 
 const Sphere = (function() {
 
 
     const sphereGeometry = (nodeSize = 1, nodeRelSize = 10, nodeResolution = 20) => {
         if (nodeSize === 1 && nodeRelSize === 10 && nodeResolution === 20) {
-            return defaultSphereGeometry.clone();
+            return settings.defaultSphereGeometry.clone();
         }
         return new THREE.SphereBufferGeometry(Math.cbrt(nodeSize) * nodeRelSize, nodeResolution, nodeResolution);
     };
@@ -23,15 +23,15 @@ const Sphere = (function() {
 
     const glowMaterial = (colour) => {
         if (!colour) {
-            return defaultGlowMaterial.clone();
+            return settings.defaultGlowMaterial.clone();
         } else {
-            let material =  defaultGlowMaterial.clone();
+            let material =  settings.defaultGlowMaterial.clone();
             material.uniforms.glowColor.value = new THREE.Color(colour);
             return material;
         }
     };
 
-    function addSphere(node, graphGroup, addImage = true) {
+    function addSphere(node, addImage = true) {
         let glowColour;
 
         let image = errorImage;
@@ -62,12 +62,12 @@ const Sphere = (function() {
             node.size = 1;
         }
 
-        /**
+
          if (node.size) {
-        material.emissive = new THREE.Color(0xFFFFFF);
-    } else {
-        material.emissive = new THREE.Color(0x89D4FF);
-    }**/
+            material.emissive = new THREE.Color(0xFFFFFF);
+        } else {
+            material.emissive = new THREE.Color(0x89D4FF);
+        }
 
         const sphereGeom = sphereGeometry(node.size);
         const sphere = new THREE.Mesh(sphereGeom, material);
@@ -80,7 +80,7 @@ const Sphere = (function() {
         sphere.name = node.name; // Add label
         sphere.__data = node.id; // Attach node data
 
-        graphGroup.add(node.mesh = sphere);
+        return sphere;
     }
 
     return {

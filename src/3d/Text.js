@@ -1,24 +1,23 @@
 import * as THREE from 'three';
 
-import { defaultMaterialFace, defaultMaterialEdge } from './settings';
+import settings from './settings';
 
 const Text = (function() {
 
     /**
      * @desc Default array of MeshBasicMaterials for text.
      * @constant
-     * @param {MeshBasicMaterial[]}
+     * @param {MeshBasicMaterial[] | null} materials
      * @type {MeshBasicMaterial[]}
-     * @default
+     * @return {MeshBasicMaterial[]}
      */
 
-    const getMaterial = (materials) => {
+    const getMaterial = (materials = null) => {
         if (!materials) {
-            return [defaultMaterialFace.clone(), defaultMaterialEdge.clone()];
+            return [settings.defaultMaterialFace.clone(), settings.defaultMaterialEdge.clone()];
         }
-        else {
-            console.log('no materials');
-        }
+
+        return materials;
 
     };
 
@@ -46,7 +45,7 @@ const Text = (function() {
         return textMesh;
     }
 
-    function addText(node, graphGroup, font, textMaterial = null) {
+    function makeText(node, font, textMaterial = null) {
         let name = node.name;
 
         if (!name) {
@@ -57,22 +56,18 @@ const Text = (function() {
             }
         }
 
-        if (!graphGroup) {
-            //@TODO mainscene?
-        }
-
         if (!textMaterial) {
             textMaterial = getMaterial();
         }
 
         let textGeometry = getGeometry(name, font);
         textGeometry.computeBoundingBox();
-        const textMesh = createText(node, textGeometry, textMaterial);
-        graphGroup.add(node.displayText = textMesh);
+
+        return createText(node, textGeometry, textMaterial);
     }
 
     return {
-        addText: addText
+        makeText: makeText
     }
 })();
 
