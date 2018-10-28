@@ -44,7 +44,7 @@ class App extends Component {
                 />
 
                 <Router>
-                    <div>
+                    <div id="routes">
                     {/** @TODO: Fix routing **/}
                         <Route exact path="/about" render={() => <About/>}/>
                         <Route path="/:id" render={

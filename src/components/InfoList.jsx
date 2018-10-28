@@ -28,7 +28,7 @@ export default function InfoList(props) {
                         result =
                             <li key={key} id={key}>
                                 <span className="key">{key}</span> :
-                                <ul className="child">
+                                <ul className={key === 'images' ? 'noMarker child' : 'child'}>
                                     <InfoList key={'InfoList-' + key} list={value}/>
                                 </ul>
                             </li>;
@@ -44,7 +44,7 @@ export default function InfoList(props) {
                             if (key === 'url' && isImageUrl(value)) {
                                 //@TODO add more meaningful alt text property derived from object titles
                                 result =
-                                    <li key={key} id={key}>
+                                    <li key={key} id={key} className="noMarker">
                                         <img src={value} alt=""/>
                                     </li>;
                             } else {
