@@ -1,10 +1,8 @@
 import { default as React, Component } from 'react';
 
-import 'bootstrap/dist/css/bootstrap.css';
-
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import { Navigation, About} from './components';
+import { About} from './components';
 import { NodegraphContainer } from './containers';
 
 import Helmet from 'react-helmet';
@@ -47,17 +45,12 @@ class App extends Component {
 
                 <Router>
                     <div>
-                        <Navigation/>
-                        <div style={{position: 'relative'}}>
-                        {/** @TODO: Fix routing **/}
-                            <Route exact path="/about" render={() => <About/>}/>
-                            <Route path="/:id" render={
-                                (props) => {
-                                    console.log("ROUTER");
-                                    console.log(props);
-                                    return <NodegraphContainer {...props}/>
-                                }} />
-                        </div>
+                    {/** @TODO: Fix routing **/}
+                        <Route exact path="/about" render={() => <About/>}/>
+                        <Route path="/:id" render={
+                            (props) => {
+                                return <NodegraphContainer {...props}/>
+                            }} />
                     </div>
                 </Router>
             </div>

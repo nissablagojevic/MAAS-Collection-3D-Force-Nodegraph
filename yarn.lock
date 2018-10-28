@@ -2,16 +2,26 @@
 # yarn lockfile v1
 
 
-"3d-force-graph@^1.10.1":
-  version "1.39.0"
-  resolved "https://registry.yarnpkg.com/3d-force-graph/-/3d-force-graph-1.39.0.tgz#aedbf267a14fb3228f903309f0bd0c4601c36f17"
+"3d-force-graph@^1.41.1":
+  version "1.41.1"
+  resolved "https://registry.yarnpkg.com/3d-force-graph/-/3d-force-graph-1.41.1.tgz#944461036f916a8d638c6483119f7b094cffeee4"
   dependencies:
     accessor-fn "^1.2.2"
-    kapsule "^1.9.1"
-    three "^0.94.0"
+    kapsule "^1.9.2"
+    three "^0.97.0"
     three-dragcontrols "^0.88.2"
-    three-forcegraph "^1.15.1"
-    three-render-objects "^1.0.6"
+    three-forcegraph "^1.16.2"
+    three-render-objects "^1.2.6"
+
+"@babel/runtime@^7.0.0":
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.1.2.tgz#81c89935f4647706fc54541145e6b4ecfef4b8e3"
+  dependencies:
+    regenerator-runtime "^0.12.0"
+
+"@tweenjs/tween.js@^17.2.0":
+  version "17.2.0"
+  resolved "https://registry.yarnpkg.com/@tweenjs/tween.js/-/tween.js-17.2.0.tgz#21f89b709bafc4b303adae7a83b4f35a0d9e4796"
 
 abab@^1.0.3:
   version "1.0.4"
@@ -992,7 +1002,7 @@ babel-register@^6.26.0:
     mkdirp "^0.5.1"
     source-map-support "^0.4.15"
 
-babel-runtime@6.26.0, babel-runtime@^6.11.6, babel-runtime@^6.18.0, babel-runtime@^6.22.0, babel-runtime@^6.26.0:
+babel-runtime@6.26.0, babel-runtime@^6.18.0, babel-runtime@^6.22.0, babel-runtime@^6.26.0:
   version "6.26.0"
   resolved "https://registry.yarnpkg.com/babel-runtime/-/babel-runtime-6.26.0.tgz#965c7058668e82b55d7bfe04ff2337bc8b5647fe"
   dependencies:
@@ -1127,10 +1137,6 @@ boom@2.x.x:
   resolved "https://registry.yarnpkg.com/boom/-/boom-2.10.1.tgz#39c8918ceff5799f83f9492a848f625add0c766f"
   dependencies:
     hoek "2.x.x"
-
-bootstrap@^3.3.7:
-  version "3.3.7"
-  resolved "https://registry.yarnpkg.com/bootstrap/-/bootstrap-3.3.7.tgz#5a389394549f23330875a3b150656574f8a9eb71"
 
 boxen@^1.2.1:
   version "1.3.0"
@@ -1478,10 +1484,6 @@ class-utils@^0.3.5:
     define-property "^0.2.5"
     isobject "^3.0.0"
     static-extend "^0.1.1"
-
-classnames@^2.2.5:
-  version "2.2.6"
-  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
 
 clean-css@4.2.x:
   version "4.2.1"
@@ -1933,8 +1935,8 @@ currently-unhandled@^0.4.1:
     array-find-index "^1.0.1"
 
 d3-binarytree@~0.1:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/d3-binarytree/-/d3-binarytree-0.1.2.tgz#63e2774f13691bbd9112a80b5ed6e9902b327f0a"
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/d3-binarytree/-/d3-binarytree-0.1.4.tgz#fa322096af6975b6bdf589eb7881aa54815f1a63"
 
 d3-collection@1:
   version "1.0.7"
@@ -1948,9 +1950,9 @@ d3-dispatch@1:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/d3-dispatch/-/d3-dispatch-1.0.5.tgz#e25c10a186517cd6c82dd19ea018f07e01e39015"
 
-d3-force-3d@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/d3-force-3d/-/d3-force-3d-1.1.0.tgz#dcfec4a54a348a57a382da9f2558312aa55a06f1"
+d3-force-3d@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/d3-force-3d/-/d3-force-3d-1.1.2.tgz#4e5957ab871f6cfa4ec93842c72a310eb4bdac2e"
   dependencies:
     d3-binarytree "~0.1"
     d3-collection "1"
@@ -1966,14 +1968,14 @@ d3-interpolate@1:
     d3-color "1"
 
 d3-octree@~0.1:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/d3-octree/-/d3-octree-0.1.2.tgz#37bf919df79e661eda5865921eb6ca7f03897fcc"
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/d3-octree/-/d3-octree-0.1.4.tgz#c3d6daf84f6b78fb11b38623e53b393e3a9276b0"
 
 d3-quadtree@1:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/d3-quadtree/-/d3-quadtree-1.0.5.tgz#305394840b01f51a341a0da5008585e837fe7e9b"
 
-d3-scale-chromatic@^1.3.0:
+d3-scale-chromatic@^1.3.3:
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/d3-scale-chromatic/-/d3-scale-chromatic-1.3.3.tgz#dad4366f0edcb288f490128979c3c793583ed3c0"
   dependencies:
@@ -2211,10 +2213,6 @@ dom-converter@~0.2:
   resolved "https://registry.yarnpkg.com/dom-converter/-/dom-converter-0.2.0.tgz#6721a9daee2e293682955b6afe416771627bb768"
   dependencies:
     utila "~0.4"
-
-dom-helpers@^3.2.0, dom-helpers@^3.2.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/dom-helpers/-/dom-helpers-3.3.1.tgz#fc1a4e15ffdf60ddde03a480a9c0fece821dd4a6"
 
 dom-serializer@0:
   version "0.1.0"
@@ -3236,10 +3234,6 @@ growly@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/growly/-/growly-1.3.0.tgz#f10748cbe76af964b7c96c93c6bcc28af120c081"
 
-gsap@1.20.4:
-  version "1.20.4"
-  resolved "https://registry.yarnpkg.com/gsap/-/gsap-1.20.4.tgz#005fba2a7bfbb3b9d27bd77e1634d2bad365a86a"
-
 gzip-size@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/gzip-size/-/gzip-size-3.0.0.tgz#546188e9bdc337f673772f81660464b389dce520"
@@ -3652,7 +3646,7 @@ interpret@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.1.0.tgz#7ed1b1410c6a0e0f78cf95d3b8440c63f78b8614"
 
-invariant@^2.1.0, invariant@^2.2.1, invariant@^2.2.2, invariant@^2.2.4:
+invariant@^2.2.1, invariant@^2.2.2, invariant@^2.2.4:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
   dependencies:
@@ -4264,10 +4258,6 @@ jest@20.0.4:
   dependencies:
     jest-cli "^20.0.4"
 
-jquery-param@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/jquery-param/-/jquery-param-0.1.2.tgz#17b1871fd7907e03706464bb6f66485b9b9af293"
-
 js-base64@^2.1.9:
   version "2.4.9"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.4.9.tgz#748911fb04f48a60c4771b375cac45a80df11c03"
@@ -4403,15 +4393,11 @@ jsx-ast-utils@^2.0.0:
   dependencies:
     array-includes "^3.0.3"
 
-kapsule@^1.9.1:
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/kapsule/-/kapsule-1.9.1.tgz#a9afc0f8c2fb71a0acb5a614fbe61955e3676378"
+kapsule@^1.9.2:
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/kapsule/-/kapsule-1.9.2.tgz#424df7b6ace3633cfbc8a8210a2ba6d52e49c055"
   dependencies:
     debounce "^1.1.0"
-
-keycode@^2.1.2:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/keycode/-/keycode-2.2.0.tgz#3d0af56dc7b8b8e5cba8d0a97f107204eec22b04"
 
 killable@^1.0.0:
   version "1.0.1"
@@ -5598,10 +5584,6 @@ pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
 
-pinkyswear@^2.2.2:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/pinkyswear/-/pinkyswear-2.2.3.tgz#e589b72c268a09d0e46458861d6b8ccc5c921a3b"
-
 pkg-dir@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/pkg-dir/-/pkg-dir-1.0.0.tgz#7a4b508a8d5bb2d629d447056ff4e9c9314cf3d4"
@@ -5617,6 +5599,12 @@ pkg-dir@^2.0.0:
 pluralize@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
+
+polished@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/polished/-/polished-2.3.0.tgz#66c8b66bc666e95d9d12d760dac9df758aed8f8e"
+  dependencies:
+    "@babel/runtime" "^7.0.0"
 
 portfinder@^1.0.9:
   version "1.0.17"
@@ -5976,14 +5964,7 @@ promise@8.0.1:
   dependencies:
     asap "~2.0.3"
 
-prop-types-extra@^1.0.1:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/prop-types-extra/-/prop-types-extra-1.1.0.tgz#32609910ea2dcf190366bacd3490d5a6412a605f"
-  dependencies:
-    react-is "^16.3.2"
-    warning "^3.0.0"
-
-prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.8, prop-types@^15.6.1, prop-types@^15.6.2:
+prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.6.1, prop-types@^15.6.2:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz#05d5ca77b4453e985d60fc7ff8c859094a497102"
   dependencies:
@@ -6067,13 +6048,6 @@ querystringify@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/querystringify/-/querystringify-2.0.0.tgz#fa3ed6e68eb15159457c89b37bc6472833195755"
 
-qwest@^4.5.0:
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/qwest/-/qwest-4.5.0.tgz#f331743a268c474a93112bbd30d6c58bafa1a5c8"
-  dependencies:
-    jquery-param "^0.1.2"
-    pinkyswear "^2.2.2"
-
 raf@3.4.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/raf/-/raf-3.4.0.tgz#a28876881b4bc2ca9117d4138163ddb80f781575"
@@ -6123,21 +6097,6 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.1.7, rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-bootstrap@^0.31.5:
-  version "0.31.5"
-  resolved "https://registry.yarnpkg.com/react-bootstrap/-/react-bootstrap-0.31.5.tgz#57040fa8b1274e1e074803c21a1b895fdabea05a"
-  dependencies:
-    babel-runtime "^6.11.6"
-    classnames "^2.2.5"
-    dom-helpers "^3.2.0"
-    invariant "^2.2.1"
-    keycode "^2.1.2"
-    prop-types "^15.5.10"
-    prop-types-extra "^1.0.1"
-    react-overlays "^0.7.4"
-    uncontrollable "^4.1.0"
-    warning "^3.0.0"
-
 react-dev-utils@^4.2.1:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/react-dev-utils/-/react-dev-utils-4.2.2.tgz#e8f2ffdbf27bfb13ee88ac18e20c83163aac0659"
@@ -6182,26 +6141,6 @@ react-helmet@^5.0.3:
     object-assign "^4.1.1"
     prop-types "^15.5.4"
     react-side-effect "^1.1.0"
-
-react-is@^16.3.2:
-  version "16.5.2"
-  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.5.2.tgz#e2a7b7c3f5d48062eb769fcb123505eb928722e3"
-
-react-overlays@^0.7.4:
-  version "0.7.4"
-  resolved "https://registry.yarnpkg.com/react-overlays/-/react-overlays-0.7.4.tgz#ef2ec652c3444ab8aa014262b18f662068e56d5c"
-  dependencies:
-    classnames "^2.2.5"
-    dom-helpers "^3.2.1"
-    prop-types "^15.5.10"
-    prop-types-extra "^1.0.1"
-    warning "^3.0.0"
-
-react-router-bootstrap@^0.23.2:
-  version "0.23.3"
-  resolved "https://registry.yarnpkg.com/react-router-bootstrap/-/react-router-bootstrap-0.23.3.tgz#970c35c53c04c61fb6b110d4ff651a7e8a73b2ba"
-  dependencies:
-    prop-types "^15.5.8"
 
 react-router-dom@^4.2.2:
   version "4.3.1"
@@ -6378,6 +6317,10 @@ regenerate@^1.2.1:
 regenerator-runtime@^0.11.0:
   version "0.11.1"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.11.1.tgz#be05ad7f9bf7d22e056f9726cee5017fbf19e2e9"
+
+regenerator-runtime@^0.12.0:
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.12.1.tgz#fa1a71544764c036f8c49b13a08b2594c9f8a0de"
 
 regenerator-transform@^0.10.0:
   version "0.10.1"
@@ -7290,14 +7233,18 @@ three-dragcontrols@^0.88.2:
   version "0.88.2"
   resolved "https://registry.yarnpkg.com/three-dragcontrols/-/three-dragcontrols-0.88.2.tgz#e4b292657b8afffd00e573401da777dfd5dd5cd5"
 
-three-forcegraph@^1.15.1:
-  version "1.15.1"
-  resolved "https://registry.yarnpkg.com/three-forcegraph/-/three-forcegraph-1.15.1.tgz#1c02173fe9d9384c60b278310dd9189bc36af80d"
+three-fly-controls@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/three-fly-controls/-/three-fly-controls-1.1.0.tgz#8ea796da94ac017f5ea44ec015b1db5e19a42bd0"
+
+three-forcegraph@^1.16.2:
+  version "1.16.2"
+  resolved "https://registry.yarnpkg.com/three-forcegraph/-/three-forcegraph-1.16.2.tgz#2545c46ad5262bfa6a6a9d1589867e53f6b94c65"
   dependencies:
     accessor-fn "^1.2.2"
-    d3-force-3d "^1.1.0"
-    d3-scale-chromatic "^1.3.0"
-    kapsule "^1.9.1"
+    d3-force-3d "^1.1.2"
+    d3-scale-chromatic "^1.3.3"
+    kapsule "^1.9.2"
     ngraph.forcelayout "^0.5.0"
     ngraph.forcelayout3d "^0.0.16"
     ngraph.graph "^0.0.14"
@@ -7307,15 +7254,18 @@ three-orbit-controls@^82.1.0:
   version "82.1.0"
   resolved "https://registry.yarnpkg.com/three-orbit-controls/-/three-orbit-controls-82.1.0.tgz#11a7f33d0a20ecec98f098b37780f6537374fab4"
 
-three-render-objects@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/three-render-objects/-/three-render-objects-1.0.6.tgz#97a139185832f0d9ccb311c8e25753344f3cf135"
+three-render-objects@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/three-render-objects/-/three-render-objects-1.2.6.tgz#6eb8c93ea41a26b4707c1eaa4c5501e6e5a55485"
   dependencies:
+    "@tweenjs/tween.js" "^17.2.0"
     accessor-fn "^1.2.2"
-    gsap "1.20.4"
-    kapsule "^1.9.1"
+    kapsule "^1.9.2"
+    polished "^2.3.0"
+    three "^0.97.0"
+    three-fly-controls "^1.1.0"
+    three-orbit-controls "^82.1.0"
     three-trackballcontrols "^0.0.7"
-    tinycolor2 "^1.4.1"
 
 three-trackballcontrols@^0.0.7:
   version "0.0.7"
@@ -7329,9 +7279,9 @@ three@^0.91.0:
   version "0.91.0"
   resolved "http://registry.npmjs.org/three/-/three-0.91.0.tgz#033fe745b64e56e679a86581957cfd1c5f9fe284"
 
-three@^0.94.0:
-  version "0.94.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.94.0.tgz#4ce6db7f2bfbf79c2d73444aa6e3cfc08a32d762"
+three@^0.97.0:
+  version "0.97.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.97.0.tgz#76141e1b0ace14246fe9198a458fefddc98a4e30"
 
 throat@^3.0.0:
   version "3.2.0"
@@ -7498,12 +7448,6 @@ uglifyjs-webpack-plugin@^0.4.6:
 uid-number@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/uid-number/-/uid-number-0.0.6.tgz#0ea10e8035e8eb5b8e4449f06da1c730663baa81"
-
-uncontrollable@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/uncontrollable/-/uncontrollable-4.1.0.tgz#e0358291252e1865222d90939b19f2f49f81c1a9"
-  dependencies:
-    invariant "^2.1.0"
 
 underscore@1.4.4:
   version "1.4.4"

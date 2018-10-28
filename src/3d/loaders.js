@@ -66,7 +66,7 @@ manager.onError = function ( url ) {
 
 };
 
-ImageLoader.load('error.jpg',
+ImageLoader.load('error.png',
     (image) => {
         errorImage = image;
     });

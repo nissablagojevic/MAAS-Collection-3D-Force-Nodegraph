@@ -4,13 +4,11 @@
   "comment": "To connect to server: homepage: https://blah.com, proxy: https://localhost:3000,",
   "private": true,
   "dependencies": {
-    "3d-force-graph": "^1.10.1",
-    "bootstrap": "^3.3.7",
+    "3d-force-graph": "^1.41.1",
     "dat.gui": "^0.7.1",
     "graphql": "^0.10.3",
     "leapjs": "^0.6.4",
     "lodash": "^4.17.5",
-    "qwest": "^4.5.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-router-dom": "^4.2.2",
@@ -24,9 +22,7 @@
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
     "prettier": "^1.9.2",
-    "react-bootstrap": "^0.31.5",
     "react-helmet": "^5.0.3",
-    "react-router-bootstrap": "^0.23.2",
     "react-scripts": "1.0.17"
   },
   "lint-staged": {

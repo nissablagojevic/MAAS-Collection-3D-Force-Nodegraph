@@ -1,5 +1,3 @@
-import Navigation from './Navigation';
-
 import About from './About';
 
 import Nodegraph from './Nodegraph';
@@ -14,4 +12,4 @@ import NodeInfoWindow from './NodeInfoWindow';
 
 import InfoList from './InfoList';
 
-export { Navigation, About, Nodegraph, SelectNarrative, Selector, Instructions, NodeInfoWindow, InfoList };
+export { About, Nodegraph, SelectNarrative, Selector, Instructions, NodeInfoWindow, InfoList };
