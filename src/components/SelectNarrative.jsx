@@ -1,5 +1,5 @@
 import { default as React, Component } from 'react';
-import Selector from './Selector';
+import { Selector, AccordionSection } from './';
 import './SelectNarrative.css';
 
 class SelectNarrative extends Component {
@@ -13,13 +13,16 @@ class SelectNarrative extends Component {
     }
 
     componentDidMount() {
+        console.log("SELECT NARRATIVE");
         this.selectNarrative();
     }
 
     selectNarrative(event) {
+        console.log(event);
         let narrative;
         let location;
         if (!event) {
+            console.log(this.props);
             if (this.props.selectedNarrative) {
                 narrative = this.props.selectedNarrative;
             } else {
@@ -36,16 +39,25 @@ class SelectNarrative extends Component {
         this.setState({selectedNarrative: narrative});
     }
 
-    render() {
-        return (
-            <div id="selectNarrative" className="info">
-                <h3>Narrative:</h3>
-                <Selector
-                    selectedItem={this.props.selectedNarrative}
-                    list={this.props.narrativesList}
-                    action={this.selectNarrative}/>
-            </div>
-        );
+  render() {
+        let selectNarrative = <div>
+                                  <h3>Narrative</h3>
+                                  <Selector
+                                    selectedItem={this.props.selectedNarrative}
+                                    list={this.props.narrativesList}
+                                    action={this.selectNarrative}/>
+                                </div>;
+
+        if (this.props.display === 'accordion') {
+            const content = <Selector
+              selectedItem={this.props.selectedNarrative}
+              list={this.props.narrativesList}
+              action={this.selectNarrative}/>;
+
+              selectNarrative = <AccordionSection key="narrative" title="Narrative" content={content}/>;
+        }
+
+        return selectNarrative;
     }
 }
 

@@ -1,6 +1,6 @@
 import { default as React, Component } from 'react';
 import { Nodegraph, SelectNarrative, NodeInfoWindow, Instructions } from '../components';
-import {sourceUrl, sourceQuery, narrativesList, nodeQuery, mapData} from '../components/resolvers.js';
+import {sourceUrl, sourceQuery, nodeQuery, mapData} from '../components/resolvers.js';
 import {GraphCanvas} from '../components/GraphCanvas.js';
 import './NodegraphContainer.css';
 
@@ -18,12 +18,10 @@ let NodegraphContainer = Nodegraph => class extends Component {
         super();
         this.state = {
             selectedNarrative: null,
-            narrativesList: null,
             responseData: null,
             selectedNode: null
         };
 
-        this.getNarrativeList = this.getNarrativeList.bind(this);
         this.getQuery = this.getQuery.bind(this);
         this.updateData = this.updateData.bind(this);
         this.handleClick = this.handleClick.bind(this);
@@ -53,19 +51,15 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     updateData() {
+        console.log("UPDATE DATA");
         const narrative = parseNarrativeId(this.props.location);
         let queryData = this.state.responseData;
-        let narrativesList = this.state.narrativesList;
 
         if (narrative !== this.state.selectedNarrative) {
             queryData =  this.getQuery(narrative);
         }
 
-        if (!narrativesList) {
-            narrativesList = this.getNarrativeList();
-        }
-
-        this.setState({selectedNarrative: narrative, narrativesList: narrativesList, responseData: queryData});
+        this.setState({selectedNarrative: narrative, responseData: queryData});
     }
     //get single narrative
     async getQuery(narrative) {
@@ -75,28 +69,11 @@ let NodegraphContainer = Nodegraph => class extends Component {
             );
             let responseJson = await response.json();
             this.setState({responseData: responseJson.data, selectedNode: null});
-            console.log(responseJson.data);
             return responseJson;
         } catch(error) {
             console.error(error);
         }
     }
-
-    //get list of all narratives
-    async getNarrativeList() {
-        try {
-            let response = await fetch(
-                sourceUrl + narrativesList
-            );
-            let responseJson = await response.json();
-            this.setState({narrativesList: responseJson.data.narratives});
-            console.log(responseJson.data);
-            return responseJson;
-        } catch(error) {
-            console.error(error);
-        }
-    }
-
 
     async getNodeInfo(node) {
         try {
@@ -128,7 +105,7 @@ let NodegraphContainer = Nodegraph => class extends Component {
             <div id="nodegraphContainer">
                 <Nodegraph {...this.props} {... this.state} handleClick={this.handleClick}/>
                 <div id="infoWindows">
-                    <SelectNarrative {...this.props} {... this.state}/>
+                    <SelectNarrative {...this.props} {... this.state} display="accordion"/>
                     <Instructions/>
                     {this.state.selectedNode ? <NodeInfoWindow node={this.state.selectedNode}/> : ''}
                 </div>

@@ -1,5 +1,7 @@
 import About from './About';
 
+import Intro from './Intro';
+
 import Nodegraph from './Nodegraph';
 
 import SelectNarrative from './SelectNarrative';
@@ -12,4 +14,6 @@ import NodeInfoWindow from './NodeInfoWindow';
 
 import InfoList from './InfoList';
 
-export { About, Nodegraph, SelectNarrative, Selector, Instructions, NodeInfoWindow, InfoList };
+import AccordionSection from './AccordionSection';
+
+export { Intro, About, AccordionSection, Nodegraph, SelectNarrative, Selector, Instructions, NodeInfoWindow, InfoList };

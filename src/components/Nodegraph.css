@@ -1,20 +1,39 @@
-.info {
-    padding: 10px;
+.Accordion-panel {
     color: white;
     font-size: 16px;
     text-align: left;
     background: rgba(0,0,0,0.8);
+    margin: 0;
+    padding: 1em 1.5em;
 }
 
-.info dd {
+.Accordion-trigger {
+    border: hsl(0, 0%, 30%) solid;
+    border-width: 1px 0;
+    color: white;
+    background: rgba(0,0,0,0.8);
+    display: block;
     font-weight: normal;
-    float: left;
-    padding: 10px;
+    margin: 0;
+    padding: 1em 1.5em;
+    position: relative;
+    text-align: left;
+    width: 100%;
+    font-size: 20px;
 }
 
-.info dt {
-    font-weight: bold;
-    float: left;
-    clear: both;
-    padding: 10px;
+.Accordion-icon {
+    border: solid hsl(0, 0%, 62%);
+    border-width: 0 2px 2px 0;
+    height: .5rem;
+    pointer-events: none;
+    position: absolute;
+    right: 1.5em;
+    top: 50%;
+    transform: translateY(-60%) rotate(45deg);
+    width: .5rem;
+}
+
+.Accordion-trigger[aria-expanded="true"] .Accordion-icon {
+    transform: translateY(-50%) rotate(-135deg);
 }

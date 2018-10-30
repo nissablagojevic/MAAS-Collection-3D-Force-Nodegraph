@@ -1,6 +1,6 @@
 import { default as React } from 'react';
 
-import { InfoList } from './';
+import { InfoList, AccordionSection } from './';
 
 import './NodeInfoWindow.css';
 
@@ -12,13 +12,13 @@ export default function NodeInfoWindow(props) {
         const property = node[nodeProperties[0]].pop();
 
         if (property) {
+
+          let content = <ul className="nodePropertyList">
+                          <InfoList key={'InfoList-' + property} list={property}/>
+                        </ul>;
+
             return (
-                <div id="nodeInfo" className="info">
-                    <h3>Selected Node</h3>
-                    <ul className="nodePropertyList">
-                        <InfoList key={'InfoList-' + property} list={property}/>
-                    </ul>
-                </div>
+              <AccordionSection key="nodeInfo" title="Selected Node" content={content}/>
             );
         }
     }

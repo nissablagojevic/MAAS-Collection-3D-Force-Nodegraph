@@ -2,19 +2,42 @@ import { default as React, Component } from 'react';
 
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import { About} from './components';
+import { Intro, About} from './components';
 import { NodegraphContainer } from './containers';
 
 import Helmet from 'react-helmet';
+import {narrativesList, sourceUrl} from "./components/resolvers";
 
 class App extends Component {
     constructor() {
         super();
         this.state = {
-        }
+          narrativesList: null,
+        };
+
+        this.getNarrativeList = this.getNarrativeList.bind(this);
     }
 
-    render() {
+  componentDidMount() {
+      this.getNarrativeList();
+  }
+
+  //get list of all narratives
+  async getNarrativeList() {
+    try {
+      let response = await fetch(
+        sourceUrl + narrativesList
+      );
+      let responseJson = await response.json();
+      this.setState({narrativesList: responseJson.data.narratives});
+      return responseJson;
+    } catch(error) {
+      console.error(error);
+    }
+  }
+
+
+  render() {
 
         return (
             <div id="page">
@@ -46,10 +69,19 @@ class App extends Component {
                 <Router>
                     <div id="routes">
                     {/** @TODO: Fix routing **/}
+                        <Route exact path="/" render={(props) => <Intro {...props} getNarrativesList={this.getNarrativeList} narrativesList={this.state.narrativesList}/>}/>
                         <Route exact path="/about" render={() => <About/>}/>
                         <Route path="/:id" render={
                             (props) => {
-                                return <NodegraphContainer {...props}/>
+                              let result = null;
+                              if (props.match.params.id === parseInt(props.match.params.id,10).toString()) {
+                                result = <NodegraphContainer
+                                          {...props}
+                                          getNarrativesList={this.getNarrativeList}
+                                          narrativesList={this.state.narrativesList}
+                                          />;
+                              }
+                              return result;
                             }} />
                     </div>
                 </Router>
