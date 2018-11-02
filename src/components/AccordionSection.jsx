@@ -1,19 +1,27 @@
 import {default as React, Component} from 'react';
 
+import './AccordionSection.css';
+
 export default class AccordionSection extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
-      isOpen: true,
+      isOpen: props.isOpen,
     };
 
     this.handleClick = this.handleClick.bind(this);
   }
 
+  componentDidMount() {
+    console.log('accordion section');
+    console.log(this.props);
+  }
+
   handleClick(e) {
     console.log(e);
     console.log(e.currentTarget);
+    this.setState({isOpen: !this.state.isOpen});
   }
 
 
@@ -23,7 +31,7 @@ export default class AccordionSection extends Component {
     return (
       <section>
         <div role="heading" aria-level="2">
-          <button aria-expanded="true"
+          <button aria-expanded={this.state.isOpen}
                   className="Accordion-trigger"
                   aria-controls={`${title}-panel`}
                   id={`${title}-heading`}
@@ -36,7 +44,7 @@ export default class AccordionSection extends Component {
         <div id={`${title}-panel`}
              role="region"
              aria-labelledby={`${title}-heading`}
-             className="Accordion-panel">
+             className={this.state.isOpen ? 'Accordion-panel' : 'Accordion-panel hidden'}>
           {this.props.content}
         </div>
       </section>

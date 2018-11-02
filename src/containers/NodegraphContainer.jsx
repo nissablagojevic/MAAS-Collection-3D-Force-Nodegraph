@@ -1,5 +1,5 @@
 import { default as React, Component } from 'react';
-import { Nodegraph, SelectNarrative, NodeInfoWindow, Instructions } from '../components';
+import { Nodegraph, SelectNarrative, NodeInfoWindow, Instructions, About } from '../components';
 import {sourceUrl, sourceQuery, nodeQuery, mapData} from '../components/resolvers.js';
 import {GraphCanvas} from '../components/GraphCanvas.js';
 import './NodegraphContainer.css';
@@ -105,8 +105,9 @@ let NodegraphContainer = Nodegraph => class extends Component {
             <div id="nodegraphContainer">
                 <Nodegraph {...this.props} {... this.state} handleClick={this.handleClick}/>
                 <div id="infoWindows">
-                    <SelectNarrative {...this.props} {... this.state} display="accordion"/>
-                    <Instructions/>
+                    <SelectNarrative {...this.props} {... this.state} display="accordion" open={true}/>
+                    <Instructions open={true}/>
+                    <About open={false}/>
                     {this.state.selectedNode ? <NodeInfoWindow node={this.state.selectedNode}/> : ''}
                 </div>
             </div>

@@ -1,16 +1,4 @@
-#nodeInfo {
-    border: 1px yellow solid;
-}
-
 .nodePropertyList {
     list-style-type: none;
     padding: 0;
-}
-
-.nodePropertyList li {
-    margin-bottom: 0.5em;
-}
-
-.nodePropertyList .key {
-    font-weight: bold;
 }

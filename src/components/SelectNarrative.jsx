@@ -54,7 +54,12 @@ class SelectNarrative extends Component {
               list={this.props.narrativesList}
               action={this.selectNarrative}/>;
 
-              selectNarrative = <AccordionSection key="narrative" title="Narrative" content={content}/>;
+              selectNarrative = <AccordionSection
+                                  key="narrative"
+                                  title="Narrative"
+                                  content={content}
+                                  isOpen={this.props.open}
+                                />;
         }
 
         return selectNarrative;

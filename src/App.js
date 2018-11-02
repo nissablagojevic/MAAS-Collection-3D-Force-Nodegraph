@@ -2,7 +2,7 @@ import { default as React, Component } from 'react';
 
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import { Intro, About} from './components';
+import { Intro } from './components';
 import { NodegraphContainer } from './containers';
 
 import Helmet from 'react-helmet';
@@ -70,7 +70,6 @@ class App extends Component {
                     <div id="routes">
                     {/** @TODO: Fix routing **/}
                         <Route exact path="/" render={(props) => <Intro {...props} getNarrativesList={this.getNarrativeList} narrativesList={this.state.narrativesList}/>}/>
-                        <Route exact path="/about" render={() => <About/>}/>
                         <Route path="/:id" render={
                             (props) => {
                               let result = null;

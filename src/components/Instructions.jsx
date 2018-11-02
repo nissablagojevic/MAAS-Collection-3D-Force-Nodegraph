@@ -2,6 +2,8 @@ import {default as React} from 'react';
 import { AccordionSection } from './';
 
 export default function Instructions(props) {
+  console.log('instructions');
+  console.log(props);
 
   let content = <div>
     <p>Select a narrative above</p>
@@ -11,6 +13,11 @@ export default function Instructions(props) {
   </div>;
 
   return (
-    <AccordionSection key="instructions" title="Instructions" content={content}/>
+    <AccordionSection
+      key="instructions"
+      title="Instructions"
+      content={content}
+      isOpen={props.open}
+    />
   );
 }
