@@ -43,6 +43,7 @@ class App extends Component {
             <div id="page">
                 <Helmet
                     titleTemplate="%s | Intercollectic Planetary"
+                    title="Intercollectic Planetary - A force directed graph of the MAAS Collection"
                     meta={[
                         {
                             name: `viewport`,

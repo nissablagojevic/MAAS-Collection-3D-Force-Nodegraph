@@ -1,7 +1,8 @@
 #nodegraphContainer {
-    border: 1px red solid;
+    padding: 0;
+    margin: 0;
     width: 100%;
-    height: 100vh;
+    height: 99vh;
 }
 
 #nodegraph {
@@ -19,4 +20,27 @@
     width: 33%;
     max-height: 100%;
     overflow-y: auto;
+}
+
+#nodegraphContainer h1 {
+    padding: 20px 28px;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+h1 a {
+    color: white;
+    text-decoration: none;
+}
+
+h1 a:link {
+    color: white;
+}
+
+h1 a:visited {
+    color: white;
+}
+
+h1 a:hover {
+    text-decoration: underline;
 }

@@ -66,7 +66,7 @@ const Controls = (function() {
             let intersects = raycaster.intersectObjects(nodes.children)
                 .filter((o) => {
                     let object = null;
-                    console.log(o);
+                    //console.log(o);
                     if (o.object.visible) {
                         object = o.object.__data;
                     }

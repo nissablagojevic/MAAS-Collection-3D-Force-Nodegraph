@@ -160,7 +160,6 @@ export const GraphCanvas = (function() {
 
 
     function init() {
-        console.log("GRAPH CANVAS INIT");
         instance = this;
 
         return {

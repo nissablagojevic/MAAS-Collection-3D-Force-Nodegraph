@@ -27,14 +27,15 @@ export const preloadImage = (array, id, i) => {
 
 export function preloadFont(json) {
     return new Promise((resolve, reject) => {
-        console.log("PRELOAD FONT");
         if (!json) {
             json = 'lineto-circular.json';
         }
 
         FontLoader.load(json,
             (f) => {resolve(f)},
-            (xhr) => {console.log('loading font')},
+            (xhr) => {
+                //console.log('loading font')
+            },
             (err) => {console.log('load failed on font'); reject(err);}
         );
     });

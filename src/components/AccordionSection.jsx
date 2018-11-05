@@ -13,14 +13,7 @@ export default class AccordionSection extends Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  componentDidMount() {
-    console.log('accordion section');
-    console.log(this.props);
-  }
-
   handleClick(e) {
-    console.log(e);
-    console.log(e.currentTarget);
     this.setState({isOpen: !this.state.isOpen});
   }
 

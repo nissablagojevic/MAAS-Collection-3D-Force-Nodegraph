@@ -11,17 +11,17 @@ class NodeGraph extends Component {
         super();
         this.state = {
             width: '100%',
-            height: '100vh'
+            height: '99vh'
         };
+
+        this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
+
+        this.graphCanvas = GraphCanvas.getInstance();
     }
 
     componentDidMount() {
-        this.graphCanvas = GraphCanvas.getInstance();
-        //set the width and height to whatever our #nodegraph mounter has calculated from its CSS
-        this.setState({width: this.mount.clientWidth, height: this.mount.clientHeight}, this.graphCanvas.resizeCanvas(this.mount.width, this.mount.height));
-
-        //then mount it to the DOM, doesn't matter if we resize first because we call resize again after react
-        //has updated the component with the proper width and height, and there's fallback values
+        this.updateWindowDimensions();
+        window.addEventListener('resize', this.updateWindowDimensions);
         this.mount.appendChild(this.graphCanvas.getRenderer().domElement);
     }
 
@@ -51,6 +51,12 @@ class NodeGraph extends Component {
     componentWillUnmount() {
         this.graphCanvas.stopLoop();
         this.graphCanvas.remove3dStuff();
+        window.removeEventListener('resize', this.updateWindowDimensions);
+    }
+
+
+    updateWindowDimensions() {
+        this.setState({ width: window.innerWidth, height: window.innerHeight }, this.graphCanvas.resizeCanvas(window.innerWidth, window.innerHeight));
     }
 
     render() {

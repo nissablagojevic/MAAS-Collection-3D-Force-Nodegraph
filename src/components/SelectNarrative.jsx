@@ -13,16 +13,13 @@ class SelectNarrative extends Component {
     }
 
     componentDidMount() {
-        console.log("SELECT NARRATIVE");
         this.selectNarrative();
     }
 
     selectNarrative(event) {
-        console.log(event);
         let narrative;
         let location;
         if (!event) {
-            console.log(this.props);
             if (this.props.selectedNarrative) {
                 narrative = this.props.selectedNarrative;
             } else {

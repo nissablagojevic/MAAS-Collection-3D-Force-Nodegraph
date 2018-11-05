@@ -1,0 +1,24 @@
+#introScreen {
+    max-width: 80%;
+    margin: 0 auto;
+    background: rgba(0,0,0,0.5);
+    padding: 50px;
+    margin-top: 20px;
+}
+
+#demo {
+    max-width: 30%;
+    border: 1px #25405a solid;
+    float: right;
+    margin: 0 20px 20px;
+}
+
+h2 {
+    font-weight: bold;
+    font-style: italic;
+    font-size: 18px;
+}
+
+h3 {
+    display: none;
+}

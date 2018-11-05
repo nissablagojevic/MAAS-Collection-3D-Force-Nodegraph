@@ -1,4 +1,59 @@
+html {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+    width: 100%;
+    border: 0;
+    vertical-align: baseline;
+}
+
 body {
-    margin: 0;
+    margin: 0 !important;
     font-family: "Helvetica Neue Light", "HelveticaNeue-Light", "Helvetica Neue", Calibri, Helvetica, Arial;
+    color: white;
+    background-color: black;
+    height: 100%;
+    width: 100%;
+    padding: 0 !important;
+    background: url("/bluecloud.jpg");
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    line-height: 1.5em;
+}
+
+a {
+    color: #0073f6;
+}
+
+a:link {
+    color: #0073f6;
+}
+
+a:visited {
+    color: #0073f6;
+}
+
+a:hover {
+    color: #46b8da;
+}
+
+a:active {
+    color: #46b8da;
+}
+
+h1 {
+    font-family: 'Bungee Hairline', cursive;
+    font-size: 2em;
+}
+
+.sr-only {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
 }

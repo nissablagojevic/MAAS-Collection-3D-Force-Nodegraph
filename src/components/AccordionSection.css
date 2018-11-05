@@ -14,7 +14,7 @@
 }
 
 .Accordion-trigger {
-    border: hsl(0, 0%, 30%) solid;
+    border: #25405a solid;
     border-width: 1px 0;
     color: white;
     background: rgba(0,0,0,0.8);
@@ -26,6 +26,7 @@
     text-align: left;
     width: 100%;
     font-size: 20px;
+
 }
 
 .Accordion-icon {

@@ -51,7 +51,6 @@ let NodegraphContainer = Nodegraph => class extends Component {
     }
 
     updateData() {
-        console.log("UPDATE DATA");
         const narrative = parseNarrativeId(this.props.location);
         let queryData = this.state.responseData;
 
@@ -105,6 +104,7 @@ let NodegraphContainer = Nodegraph => class extends Component {
             <div id="nodegraphContainer">
                 <Nodegraph {...this.props} {... this.state} handleClick={this.handleClick}/>
                 <div id="infoWindows">
+                  <h1><a href="/">Intercollectic Planetary</a></h1>
                     <SelectNarrative {...this.props} {... this.state} display="accordion" open={true}/>
                     <Instructions open={true}/>
                     <About open={false}/>

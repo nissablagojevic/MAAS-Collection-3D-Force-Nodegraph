@@ -18,7 +18,7 @@ export default function NodeInfoWindow(props) {
                         </ul>;
 
             return (
-              <AccordionSection key="nodeInfo" title="Selected Node" content={content}/>
+              <AccordionSection key="nodeInfo" title="Selected Node" content={content} isOpen={true}/>
             );
         }
     }

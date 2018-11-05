@@ -30,7 +30,6 @@ export const GraphLayout = (function() {
         return {
             createForceLayout: function(mappedData){
                 data = mappedData;
-                console.log('createForceLayout');
                 // Feed data to force-directed layout
                 // @TODO: either remove the d3 version or get it working with this later.
                 if (isD3Sim && data !== null) {
@@ -47,8 +46,6 @@ export const GraphLayout = (function() {
                     // currently using ngraph for the maths in the force layout
                     // ngraph
                     const graph = ngraph.graph();
-
-                    console.log('ngraph graph');
 
                     if(data !== null) {
                         const centralNode = data.nodes[0];

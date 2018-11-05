@@ -13,10 +13,13 @@ export default function Selector(props) {
         });
 
         return(
-            <select value={props.selectedItem} onChange={props.action}>
+          <div>
+            <label htmlFor="narrativeSelect" className="sr-only">Narrative</label>
+            <select id="narrativeSelect" value={props.selectedItem} onChange={props.action}>
                 <option key="noValue" value="">Please select a narrative</option>
                 {options}
             </select>
+          </div>
         );
     }
 
