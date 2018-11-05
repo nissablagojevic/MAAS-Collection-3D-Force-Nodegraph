@@ -13,19 +13,37 @@ function parseNarrativeId(location) {
     return null;
 }
 
+const mql = window.matchMedia(`(min-width: 800px)`);
+
 let NodegraphContainer = Nodegraph => class extends Component {
     constructor() {
         super();
         this.state = {
             selectedNarrative: null,
             responseData: null,
-            selectedNode: null
+            selectedNode: null,
+            drawerOpen: mql.matches
         };
 
         this.getQuery = this.getQuery.bind(this);
         this.updateData = this.updateData.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.getNodeInfo = this.getNodeInfo.bind(this);
+        this.openDrawer = this.openDrawer.bind(this);
+        this.mediaQueryChanged = this.mediaQueryChanged.bind(this);
+
+    }
+
+    componentWillMount() {
+      mql.addListener(this.mediaQueryChanged);
+    }
+
+    componentWillUnmount() {
+      mql.removeListener(this.mediaQueryChanged);
+    }
+
+    mediaQueryChanged() {
+      this.setState({ drawerOpen: !mql.matches });
     }
 
     componentDidMount() {
@@ -99,16 +117,23 @@ let NodegraphContainer = Nodegraph => class extends Component {
         }
     }
 
+    openDrawer() {
+      this.setState({drawerOpen: !this.state.drawerOpen});
+    }
+
     render() {
         return (
             <div id="nodegraphContainer">
                 <Nodegraph {...this.props} {... this.state} handleClick={this.handleClick}/>
-                <div id="infoWindows">
+                <div id="infoWindows" className={this.state.drawerOpen ? '' : 'minimise'}>
                   <h1><a href="/">Intercollectic Planetary</a></h1>
+                  <button id="drawerToggle" onClick={this.openDrawer}>{this.state.drawerOpen ? 'Close' : 'Open'} Menu</button>
+                  <div id="drawer" className={this.state.drawerOpen ? 'drawer' : 'drawer hidden'}>
                     <SelectNarrative {...this.props} {... this.state} display="accordion" open={true}/>
                     <Instructions open={true}/>
                     <About open={false}/>
                     {this.state.selectedNode ? <NodeInfoWindow node={this.state.selectedNode}/> : ''}
+                  </div>
                 </div>
             </div>
         )
